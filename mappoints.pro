@@ -1,3 +1,10 @@
+; docformat = 'rst'
+;
+; :NAME:
+;   mappoints
+;
+;
+; 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5,6 +12,9 @@
  ; Routines to preserve the input device graphics state and return to
  ; this after we are done (or if there's an error).
  FUNCTION mpf_plot_begin_save
+;+
+; :HIDDEN:
+;-
    COMPILE_OPT hidden, idl2
    ON_ERROR, 2
    ;; Save the current device colours
@@ -14,6 +24,9 @@
  END
 
  PRO mpf_plot_reset, deviceGraphicStruct
+;+
+; :HIDDEN:
+;-
    COMPILE_OPT hidden, idl2
    ;; Back to the original device.
    SET_PLOT, deviceGraphicStruct.my_device
@@ -31,6 +44,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
  ; Draws a single point in the z-buffer using POLYFILL.
  PRO mpf_point, value, lat, lon, radius, SHAPE=shape
+;+
+; :HIDDEN:
+;-
    COMPILE_OPT hidden, idl2
 
    IF ~KEYWORD_SET( radius ) THEN radius = 120D0
@@ -85,85 +101,187 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;; MAIN ROUTINE ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;+
- FUNCTION MAPPOINTS, pts, lat, lon, LOG=log, SQUARE=square, $
-                     LIMIT=limit_in, RANGE=range, RADIUS=radius, $
-                     CURRENT=current, DIMENSIONS=dimensions, $
-                     BUFFER=buffer, $
-                     DPCM=dpcm, COLOUR_BACKGROUND=colour_background, $
-                     COLOUR_LAND=colour_land, $
-                     SIDEBAR=sidebar, COLOURBAR=colourbar, $
+ FUNCTION MAPPOINTS, pts, lat, lon, $
+                     ;; Data keywords
+                     LOG=log, $
+                     RANGE=range, $
+                     RADIUS=radius, $
+                     SQUARE=square, $
+                     DPCM=dpcm, $
+                     ;; Colour bar keywords
+                     SIDEBAR=sidebar, $
+                     COLOURBAR=colourbar, $
                      CBAR_VALUES=cbar_values, $
                      CBAR_LABELS=cbar_labels, $
-                     CENTER_LATITUDE=clat_in, CENTER_LONGITUDE=clon_in, $
-                     NOCONTINENTS=nocontinents, HIRES=hires, $
+                     ;; Mapping keywords
+                     COLOUR_BACKGROUND=colour_background, $
+                     COLOUR_LAND=colour_land, $
+                     CENTER_LATITUDE=clat_in, $
+                     CENTER_LONGITUDE=clon_in, $
+                     HIRES=hires, $
+                     LIMIT=limit_in, $
+                     NOCONTINENTS=nocontinents, $
+                     ;; Window keywords.
+                     BUFFER=buffer, $
+                     CURRENT=current, $
+                     DIMENSIONS=dimensions, $
                      LAYOUT=layout, $
-                     OBJECTS=object, DEBUG=debug, STOP=stop, TEST=test, $
+                     ;; Everything else.
+                     OBJECTS=object, $
+                     DEBUG=debug, $
+                     STOP=stop, $
+                     TEST=test, $
                      _EXTRA=extra
+;+
+;
+;     .. image:: mappoints.png
 ;
 ;
 ;
-;
-; :DESCRIPTION:
 ;    Created a MAPPOINTS style plot using function graphics. Specifically,
 ;     an image is created in the z-buffer, and then projected into map
-;     coordinates as an image using IMAGE_PLOT_F(). The majority of
-;     IMAGE_PLOT_F keywords are applicable, along with the following
+;     coordinates as an image using `IMAGE_PLOT_F`. The majority of
+;     `IMAGE_PLOT_F` keywords are applicable, along with the following
 ;     options.
 ;
+; :Categories:
+;    Function graphics, mappoints
 ;
-; :USAGE:
-;    x = MAPPOINTS( data, latitude, longitude, [OPTIONS] )
 ;
-; :INPUTS:
-;    data:      The data field to be plotted
-;    latitude:  The latitude of each data point.
-;    longitude: The longitude of each data point.
-;   Data, latitude, and longitude must have the same number of elements
-;    and must all be specified.
+; :Returns:
+;    An `IMAGE` object.
+;
+;
+; :PARAMS:
+;
+;    pts: in, required, type=numeric
+;        The data field to be plotted.
+;    lat: in, required, type=float
+;        The latitude of each data point.
+;    lon: in, required, type=float
+;        The longitude of each data point.
+;
+;
+;   pts, lat, and lon must have the same number of elements
+;   and must all be specified.
+;
 ;
 ;
 ; :KEYWORDS:
-;    RANGE:  A 2-element array giving the data range to be plotted. 
-;    /LOG:   Will the data range be plotted on a logarithmic scale.
-;    LIMIT:  A 4-element array containing [lat_min,lon_min,lat_max,lon_max].
-;    RADIUS: The radius of each pixel point in km. (Default = 120)
-;    DPCM:   Dots per cm. The resolution of the output image. (Default = 5).
-;    COLOUR_BACKGROUND: A colour for areas with no data.
-;    COLOUR_LAND : A colour for areas with no data which are land.
-;    CBAR_VALUES: Values on the colourbar at which to add ticks.
-;    CBAR_LABELS: Labels for the colourbar. Only sensible when also defining
-;                  CBAR_VALUES. It must have the same number of elements.
+;    LOG: in, optional, type=boolean
+;      Represent the data on a logarithmic scale.
+;    RANGE: in, optional
+;           A 2-element array giving the data range to be plotted. 
+;    RADIUS: in, optional, type=numeric, default=120
+;      The radius of each pixel point in km (or width if the `SQUARE` 
+;       keyword is set).
+;    SQUARE: in, optional, type=boolean, default=0
+;      Make each point a square instead of a circle.
+;    DPCM: in, optional, type=float, default=2
+;      Dots per cm. The resolution of the output image.
+;
+;
+;  Colourbar and colour options
+;  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;    SIDEBAR: in, optional, type=boolean, default=0
+;        Include a colourbar to the left of the image.
+;    COLOURBAR: in, optional, type=boolean, default=0
+;        Include a colourbar below the image.
+;    CBAR_VALUES: in, optional, type=fltarr()
+;      Values on the colourbar at which to add ticks.
+;    CBAR_LABELS: in, optional, type=strarr()
+;      Labels for the colourbar. Only sensible when also defining
+;      `CBAR_VALUES`. It must have the same number of elements.
+;    COLOUR_BACKGROUND: in, optional, type=string/bytarr(3), default='white'
+;      A colour for areas with no data.
+;    COLOUR_LAND: in, optional, type=string/bytarr(3), default='transparent'
+;      A colour for areas with no data which are land.
+;
+;
+;  Map options
+;  ~~~~~~~~~~~
+; 
+;   These keywords work identically to the same keywords in the `MAP` function.
+;    CENTER_LATITUDE: in, optional, type=numeric
+;    CENTER_LONGITUDE:in, optional, type=numeric
+;    HIRES: in, optional, type=boolean, default=0
+;    LIMIT: in, optional, type=FLTARR(4)
+;      A 4-element array containing [lat_min,lon_min,lat_max,lon_max].
+;    NOCONTINENTS: in, optional, type=boolean, default=0
+;      Don't draw the outline of continents on the plot.
+;
+;
+;  Window Options
+;  ~~~~~~~~~~~~~~
+;  
+;   These keywords work identically to the same keywords in the 
+;   `WINDOW` function.
+;
+;
+;    BUFFER: in, optional, type=boolean
+;
+;    CURRENT: in, optional, type=boolean
+;
+;    DIMENSIONS: in, optional
+;
+;    LAYOUT: in, optional
+;
+;  Miscellaneous options
+;  ~~~~~~~~~~~~~~~~~~~~~
 ;    
-;  ALL OTHER KEYWORDS TO IMAGE_PLOT_F SHOULD PASS WITHIN REASON!
+;    OBJECTS: out, optional, type=objref
+;      A structure containing objects created by the routine.
+;      Useful for subsequent plot modification.
+;    TEST: in, optional, type=boolean
+;      An example plot.
+;    DEBUG: in, optional, type=boolean
+;      Don't leave the routine on error.
+;    STOP: in, optional, type=boolean
+;      Stop immediately before returning from the routine.
+;    _EXTRA:
+;      Additional keywords to pass to `IMAGE_PLOT_F`. Most things should work 
+;       sensibly.
 ;
 ;
-; :DEPENDENCIES:
-;    This routine uses IMAGE_PLOT_F() for generating the final image
-;     and HECKBERT() to place tickmarks on the colourbar.
+; :USES:
+;    `IMAGE_PLOT_F`
+;    `HECKBERT`
 ;
 ;
-; :SIDE EFFECTS:
+; :POST:
 ;    The z-buffer will be wiped.
 ;
 ;
 ;
-; :CURRENT ISSUES:
-;    * Plotting across the international date line is not working...
+; :BUGS:
+;    * Plotting across the international date line is temperamental at best.
+;
+;
+; :AUTHOR:
+;    Andy Smith  (smith [at] atm.ox.ac.uk / aja.smith [at] gmail.com)
+;
 ;
 ; :HISTORY:
+;
 ;    04 Mar 2014 (AJAS) Created.
+;
 ;    02 Sep 2014 (AJAS) Documented and added to EODG library.
+;
 ;    10 Oct 2014 (AJAS) COLOUR_LAND AND /TEST keyword added.
+;
 ;    14 Oct 2014 (AJAS) Fixed bug when using CBAR_VALUES keyword.
+;
 ;    20 Nov 2014 (AJAS) Modified land colour so that clon is no longer
 ;         passed to map_proj_init unless defined by the user.
+;
 ;    11 Dec 2014 (AJAS) Added LAYOUT keyword explicitly to reduce overly
 ;         large images generated for many plots in the same window.
 ;         Reduced default image resolution.
+;
 ;    12 Dec 2014 (AJAS) Check that range is finite before plotting: otherwise
 ;         we get stuck in an infinite loop inside HECKBERT() function.
 ;         Disabled refreshing until the very end. 
+;
 ;    06 Jan 2015 (AJAS) Modified colour usage: missing colour is now dealt
 ;         with by being transparent. As a result, it is actually the back-
 ;         ground colour defined in IMAGE_PLOT_F. Similarly, this makes the

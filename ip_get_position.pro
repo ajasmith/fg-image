@@ -1,15 +1,30 @@
-;+
+; docformat = 'rst'
+;
+; :NAME:
+;   IP_GET_POSITION
+;
  FUNCTION IP_GET_POSITION, flag_cb, layout, plot_position_in, cbar_position_in
+;+
+;
 ;
 ; Get the normalised position in a function graphics window that will include
 ;  the main plot, colour bar, and missing value mark for an IMAGE_PLOT_F call.
 ;
 ; This has been shunted into a seperate routine so that other routines that
-; might use IMAGE_PLOT_F can obtain the dimensions of a window without having
-; to make a fake plot and then delete it.
+; might use `IMAGE_PLOT_F` can obtain the dimensions of a window without
+; having to make a fake plot and then delete it.
 ;
 ;
-; 05 MAR 2014 (AJAS) Created by moving code from IMAGE_PLOT_F.
+; :CATEGORIES:
+;    Function graphics, image_plot
+;
+; :AUTHOR:
+;    Andy Smith  (smith [at] atm.ox.ac.uk / aja.smith [at] gmail.com)
+;
+;
+; :HISTORY:
+;
+;      05 MAR 2014 (AJAS) Created by moving code from `IMAGE_PLOT_F`.
 ;-
 
     CASE (flag_cb MOD 4) OF

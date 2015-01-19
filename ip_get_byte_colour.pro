@@ -1,15 +1,33 @@
+; docformat = 'rst'
+;
+;
+ FUNCTION IP_GET_BYTE_COLOUR, colour
 ;+
- FUNCTION ip_get_byte_colour, colour
+;
 ;
 ; Takes a colour name, or a 3-element array and returns a valid
 ; 3-element byte array valid for RGB colours in IDL. Errors return
 ; black. [0b, 0b, 0b]. This is designed for use with IMAGE_PLOT_F.
 ;
-; e.g.
-; IDL> PRINT, IP_GET_BYTE_COLOUR( 'hot pink' )
-;  255 105 180
-; IDL> PRINT, IP_GET_BYTE_COLOUR( [34.2, 15.0, 200.0] )
-;   34  15 200
+; :Categories:
+;    Function graphics, image_plot
+;
+; :Examples:
+; 
+;    Get the RGB values of hot pink::
+;
+;        IDL> PRINT, IP_GET_BYTE_COLOUR( 'hot pink' )
+;        255 105 180
+;
+;    Make sure that the RGB values are correct type.
+;        IDL> PRINT, IP_GET_BYTE_COLOUR( [34.2, 15.8, 200.0] )
+;        34  15 200
+;
+;
+;
+;
+; :AUTHOR:
+;    Andy Smith  (smith [at] atm.ox.ac.uk / aja.smith [at] gmail.com)
 ;
 ;-
    

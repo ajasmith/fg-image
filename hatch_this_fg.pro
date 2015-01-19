@@ -1,35 +1,56 @@
+; docformat = 'rst'
+;
+FUNCTION HATCH_THIS_FG, nx, ny, q, image_object
 ;+
-; NAME:
-;  FUNCTION HATCH_THIS_FG, nx, ny, qhatch, image_object
 ;
-; PURPOSE:
-;  Given a regular [nx, ny] 2D array, hatch the areas marked by 
-;   qhatch in an IMAGE_PLOT_FG image.
+;  .. image:: hatch_this_fg.png
 ;
-; INPUT VARIABLES:
-;  nx       - Number of elements in x dimension.
-;  ny       - Number of elements in y dimension.
-;  qhatch   - Elements to hatch (as given by WHERE() ).
-;  image_object - An IMAGE object.
 ;
-; OUTPUT VARIABLES:
-;  NONE.
-; 
-; EXAMPLE CALL:
+;  Given a regular [nx, ny] 2D array, hatch the areas indexed by 
+;  q in an `IMAGE_PLOT_FG` image.
+;
+;
+; :Categories:
+;    Function graphics, image_plot
+;
+; :PARAMS:
+;    nx: in, required, type=long
+;        Number of elements in x-dimension of image.
+;    ny: in, required, type=long
+;        Number of elements in y-dimension of image.
+;    q: in, required, type=long
+;        Elements of image to hatch (as given by `WHERE`).
+;    image_object: in, required, type=objref
+;        An `IMAGE` object on which to hatch.
+;
+; :RETURNS:
+;    An 2 element array of `POLYGON` object references. 
+;
+;
+; :EXAMPLES:
 ;    
-;    IDL> z = RANDOMU(seed,[15,15]) - 0.5
-;    IDL> i = IMAGE_PLOT_F( z,/SIDE,/BWRDIF)
-;    IDL> ;; Hatch all positive values of z.
-;    IDL> q = WHERE( z GT 0 )
-;    IDL> h = HATCH_THIS_FG( 15, 15, q, i )
+;    Hatch all positive values of a random array, z::
 ;
-; HISTORY:
-;  18 Aug 2014 (AJAS) Modified HATCH_THIS procedure for
-;                      use with IMAGE() function graphics.
+;        ;; Create a random array.
+;        z = RANDOMU(seed,[15,15]) - 0.5
+;        ;; Plot the image
+;        i = IMAGE_PLOT_F( z,/SIDE,/BWRDIF)
+;        ;; Find the indices for positive z.
+;        q = WHERE( z GT 0 )
+;        h = HATCH_THIS_FG( 15, 15, q, i )
 ;
-;- 
-
-FUNCTION hatch_this_fg, nx, ny, q, ipo
+;
+; :AUTHOR:
+;    Andy Smith  (smith [at] atm.ox.ac.uk / aja.smith [at] gmail.com)
+;
+;
+; :HISTORY:
+;  18 Aug 2014 (AJAS) Modified hatch_this.pro procedure for
+;                      use with `IMAGE` function graphics.
+;
+;  19 Jan 2015 (AJAS) Updated documentation.
+;
+;-
 
   ON_ERROR, 2
 
@@ -48,7 +69,7 @@ FUNCTION hatch_this_fg, nx, ny, q, ipo
 
   ;; We will be overplotting on the image object so
   ;; should probably test that we are dealing with one of those.
-  IF ~ISA(ipo,'IMAGE') THEN MESSAGE, $
+  IF ~ISA(image_object,'IMAGE') THEN MESSAGE, $
      'Can only hatch over images. You must pass an image object reference.'
 
 
@@ -56,9 +77,9 @@ FUNCTION hatch_this_fg, nx, ny, q, ipo
 
   ;; If there is a map projection active, then we'll need
   ;; to convert lat-lon to projected metres.
-  isMap = KEYWORD_SET( ipo.MAP_PROJECTION )
+  isMap = KEYWORD_SET( image_object.MAP_PROJECTION )
   IF isMap THEN BEGIN
-     thisMap = ipo.MAPPROJECTION
+     thisMap = image_object.MAPPROJECTION
 
      ;; Set up plotting scales in degrees.
      limit = thisMap.LIMIT
@@ -70,11 +91,11 @@ FUNCTION hatch_this_fg, nx, ny, q, ipo
      
   ENDIF ELSE BEGIN
      ;; Set up the plotting scales.
-     x0 = ( ipo.XRANGE )[0]
-     dx = ( ( ipo.XRANGE )[1] - x0 ) / DOUBLE( nx )
+     x0 = ( image_object.XRANGE )[0]
+     dx = ( ( image_object.XRANGE )[1] - x0 ) / DOUBLE( nx )
      
-     y0 = ( ipo.YRANGE )[0]
-     dy = ( ( ipo.YRANGE )[1] - y0 ) / DOUBLE( ny )
+     y0 = ( image_object.YRANGE )[0]
+     dy = ( ( image_object.YRANGE )[1] - y0 ) / DOUBLE( ny )
   ENDELSE
      
 
@@ -105,14 +126,14 @@ FUNCTION hatch_this_fg, nx, ny, q, ipo
      ;   PRINT,thisX,thisY,i,FORMAT='(2("[",4(F0,","),F0,"], "),I10 )'
   ENDFOR
 
-  p0 = POLYGON(xf, yf, CONNECTIVITY=cf, TARGET=ipo, /DATA, $
+  p0 = POLYGON(xf, yf, CONNECTIVITY=cf, TARGET=image_object, /DATA, $
                LINESTYLE=6, FILL_COLOR='Black', $
                FILL_PATTERN=OBJ_NEW('IDLgrPattern',1,$
                                     ORIENTATION=40, $
                                     SPACING=10) $
                )
 
-  p1 = POLYGON(xf, yf, CONNECTIVITY=cf, TARGET=ipo, /DATA, $
+  p1 = POLYGON(xf, yf, CONNECTIVITY=cf, TARGET=image_object, /DATA, $
                LINESTYLE=6, FILL_COLOR='Black', $
                FILL_PATTERN=OBJ_NEW('IDLgrPattern',1,$
                                     ORIENTATION=320, $
@@ -157,6 +178,9 @@ i1 = IMAGE_PLOT_F( z, x, y, RANGE=r, /SIDE, /BWRDIF, $
                    LAYOUT=[1,2,2], /CURRENT, /HIDE_TAPER, $
                    TITLE='Hatching positive values on map projection', $
                    /CONTINENTS,MAP_PROJECTION='Mercator',HATCH_THIS=q )
+
+
+
 
 
 

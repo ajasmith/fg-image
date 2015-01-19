@@ -1,5 +1,10 @@
 ; docformat = 'rst'
-FUNCTION image_plot_f, z, x, y, $
+;
+; :NAME:
+;   image_plot_f
+;
+;
+FUNCTION IMAGE_PLOT_F, z, x, y, $
                         ;; BASIC AXIS STUFF
                         LOG = log, RANGE= range, TITLE= title, $
                         XLOG=xlog, XTITLE=xtitle, $
@@ -7,11 +12,11 @@ FUNCTION image_plot_f, z, x, y, $
                         FONT_NAME=font_name, $
                         FONT_STYLE=font_style, $
                         FONT_SIZE=font_size, $
+                        ;; HATCH THIS support
+                        HATCH_THIS=hatch_this, $
                         ;; HANDLING COLOURS
                         MISSING=missing, COLOURTABLE=colourtable,$
                         REVERSE_COLOURS=reverse_colours, $
-                        BWRDIFF=bwrdiff, BWR2DIFF=bwr2diff, $
-                        BGRDIFF=bgrdiff, GREEN=green, RED=red, BLUE=blue,$
                         COLOUR_TOO_LOW=ctl, $
                         COLOUR_TOO_HIGH=cth,$
                         COLOUR_MISSING=cm, $
@@ -22,208 +27,336 @@ FUNCTION image_plot_f, z, x, y, $
                         HIDE_TAPER=hide_taper, $
                         HIDE_COLOURBAR=hide_cbar, $
                         SHOW_KEY_MISSING=show_key_missing, $
+                        BWRDIFF=bwrdiff, BWR2DIFF=bwr2diff, $
+                        BGRDIFF=bgrdiff, GREEN=green, RED=red, BLUE=blue,$
                         ;; MAP PROJECTION STUFF
                         CONTINENTS=continents, HIRES=hires, $
                         MAP_PROJECTION=map_projection, $
                         CENTER_LATITUDE=clat, $
                         CENTER_LONGITUDE=clon, $
                         LIMIT=limit, $
-                        ;; HATCH THIS support
-                        HATCH_THIS=hatch_this, $
                         ;; WINDOW STUFF
-                        LAYOUT=layout, CURRENT=current, $
                         PLOT_POSITION=plot_position_in, $
                         CBAR_POSITION=cbar_position_in, $
-                        DIMENSIONS=dimensions, $
                         DONT_REFRESH=dont_refresh, $
+                        BUFFER=buffer, $
+                        CURRENT=current, $
+                        DIMENSIONS=dimensions, $
+                        LAYOUT=layout, $
                         NAME=name, $
                         WINDOW_TITLE=window_title, $
-                        BUFFER=buffer, $
                         ;; RELEVANT OBJECTS e.g. map, colourbar, etc.
                         OBJECTS=objects, $
                         ;; Example call
                         TEST=test, $
                         ;; Debugging
                         MAP_BUG_TEST=map_bug_test, $
-                        DEBUG=debug, STOP=stop, IMAGE=im
+                        DEBUG=debug, STOP=stop;, IMAGE=im
 
 
 ;+
-; FUNCTION IMAGE_PLOT_F( z [, x, y, OPTIONS] )
 ;
-; :DESCRIPTION:
-;    Recreates the functionality of IMAGE_PLOT using function
-;     graphics (using IDL function IMAGE() instead of TVSCALE).
-;     This routine is only suitable for IDL versions 8.1 and
-;     above.
+;    Recreates the functionality of `IMAGE_PLOT` using function
+;    graphics (using IDL function `IMAGE` instead of Coyote's `TVSCALE`).
+;    This routine is only suitable for IDL versions 8.1 and
+;    above.
 ;
 ;
-; :USAGE:
-;    image_plot_object = IMAGE_PLOT_F( z, [x,] [y,] [KEYWORDS] )
+; :Categories:
+;    Function graphics, image_plot
 ;
 ;
-; :INPUTS:
-;    z: Either a 2D data field, or a 3D image (with a dimension of
-;        size 3). If more than one dimension has size 3, then the
-;        final dimension of size 3 is the RGB dimension.
+;
+; :Returns:
+;    An `IMAGE` object.
 ;
 ;
-; :OPTIONAL INPUTS:
-;    [x, y]: Regular x and y values corresponding to the centre of
-;             each data field in z. If x and y values are not on a
-;             regular grid, then an error will be thrown. For
-;             irregular values, re-label the axes after plotting.
+;
+; :Params:
+;    z: in, required, type=numeric
+;      Either a 2D data field, or a 3D image (with a dimension of
+;      size 3). If more than one dimension has size 3, then the
+;      final dimension of size 3 is the RGB dimension.
 ;
 ;
-; :OPTIONAL OUTPUT KEYWORDS:
-;    OBJECTS: A structure containing all of the plotting objects
-;                created. This may include colourbar, map, and
-;                continent objects based on keywords set below.
-;                These can be used to alter the image after the
-;                fact.
+;    x: in, optional, type=numeric 
+;    y: in, optional, type=numeric 
+;         Regular x and y values corresponding to the centre of
+;         each data field in z. If x and y values are not on a
+;         regular grid, then an error will be thrown. For
+;         irregular values, re-label the axes after plotting.
 ;
-; :OPTIONAL AXIS KEYWORDS:
-;    RANGE:      The range of values of z.
-;    LOG:        Plot the z data on a logarithmic scale (2D only).
-;    TITLE:      The title of the plot.
-;    [X/Y]TITLE: The title of the x- and y-axes.
-;    [X/Y]LOG:   Is the x-/ y- axis on a logarithmic scale?
-;    FONT_NAME:  e.g. 'Times', 'Helvetica', 'Courier'. 
-;    FONT_STYLE: e.g. 'Bold', 'Italic', 'Normal'.
-;    FONT_SIZE:  e.g. 5, 11, 14.
+;
+; :Keywords:
+;
+;
+;    RANGE: in, optional
+;          The range of values of z.
+;    LOG: in, optional, type=boolean, default=0
+;       Plot the z data on a logarithmic scale (2D only).
+;    TITLE: in, optional, type=string, default=''
+;       The title of the plot.
+;    XTITLE: in, optional, type=string, default=''
+;       The title of the x-axis
+;    XLOG: in, optional, type=boolean, default=0
+;       Is the x-axis on a logarithmic scale?
+;    YTITLE: in, optional, type=string, default=''
+;       The title of the y-axis
+;    YLOG: in, optional, type=boolean, default=0
+;       Is the y-axis on a logarithmic scale?
+;    FONT_NAME: in, optional, type=string
+;       e.g. 'Times', 'Helvetica', 'Courier'.
+;    FONT_STYLE:in, optional, type=string
+;       e.g. 'Bold', 'Italic', 'Normal'.
+;    FONT_SIZE:in, optional, type=float
+;        e.g. 5, 11, 14.
+;    HATCH_THIS: in, optional, type=long
+;       An array of image element indices to hatch.
+;
 ;
 ; 
-; :OPTIONAL COLOURBAR KEYWORDS (2D only):
-;    MISSING:     A value that indicates missing data. (NaNs are
-;                    automatically assumed missing values).
-;    /TRANSPARENT_MISSING: Makes missing data transparent. This
-;                    overides the COLOUR_MISSING keyword.
-;    NCOLOURS:    The number of colours used in the scale.
-;    COLOURTABLE: Either a single colourtable number, an [N,3]
-;                    array of colours (which overrules NCOLOURS), 
-;                    or an N-length array of string names (again
-;                    overuling NCOLOURS).
-;    /COLOURBAR:  Include a colourbar under the image.
-;    /REVERSE_COLOURS: Reverse the order of colours in the table.
-;    /SIDEBAR:    Include a colourbar to the left of the image.
-;    CBAR_TITLE:  Include a title on the colourbar.
-;    /HIDE_TAPER: Hide the tapers at the top and bottom of a
-;                    colourbar which show the too-high and too-
-;                    low colours.
-;    /HIDE_COLOURBAR: Hide the colourbar, but leave the main 
-;                    plot as if the colourbar was set.
-;    SHOW_KEY_MISSING: Add a key next to the colour bar showing
-;                    the colour for missing data. This keyword
-;                    has no effect if there is no colour bar.
-;                    If a string is passed, this becomes the
-;                    description.
+;   Colourbar Keywords (2D only)
+;   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;
-;    /BWRDIFF:    A blue-white-red colourbar (for differences).
-;    /BWR2DIFF:   An alternate blue-white_red colourbar.
-;    /BGRDIFF:    Blue-grey-red colourbar.
-;    /GREEN,/RED,/BLUE: White->[green,red,blue]->black colourbars.
-;        These specific colourtable options overrule COLOURTABLE.
+;    MISSING: in, optional, type=float, default=NaN
+;        A value that indicates missing data. (NaNs are
+;        automatically assumed missing values).
+;    TRANSPARENT_MISSING: in, optional, type=boolean, default=0
+;        Makes missing data transparent. This overides the 
+;        COLOUR_MISSING keyword.
+;    NCOLOURS: in, optional, type=integer, default=30
+;        The number of colours used in the scale.
+;    COLOURTABLE: in, optional, type=integer/string/byte
+;        Either a single colourtable number, an [N,3]
+;        array of colours (which overrules NCOLOURS), 
+;        or an N-length array of string names (again
+;        overuling NCOLOURS).
+;    COLOURBAR: in, optional, type=boolean, default=0
+;        Include a colourbar under the image.
+;    REVERSE_COLOURS: in, optional, type=boolean, default=0
+;        Reverse the order of colours in the table.
+;    SIDEBAR: in, optional, type=boolean, default=0
+;        Include a colourbar to the left of the image.
+;    CBAR_TITLE: in, optional, type=string
+;        Include a title on the colourbar.
+;    HIDE_TAPER: in, optional, type=boolean, default=0
+;        Hide the tapers at the top and bottom of a colourbar
+;        which show the too-high and too-low colours.
+;    HIDE_COLOURBAR: in, optional, type=boolean, default=0
+;        Hide the colourbar, but leave the main 
+;        plot as if the colourbar was set.
+;    SHOW_KEY_MISSING: in, optional, type=boolean, default=0
+;        Add a key next to the colour bar showing
+;        the colour for missing data. This keyword
+;        has no effect if there is no colour bar.
+;        If a string is passed, this becomes the description.
+;
+; 
+;    COLOUR_TOO_LOW: in, optional, type=string/byte 
+;        The colour used for z data below range[0].
+;        Can be defined by a string or an RGB 3-byte array.
+;    COLOUR_TOO_HIGH: in, optional, type=string/byte
+;        The colour used for z data above range[1].
+;        Can be defined by a string or an RGB 3-byte array.
+;    COLOUR_MISSING: in, optional, type=string/byte
+;        The colour used for missing z data.
+;        Can be defined by a string or an RGB 3-byte array.
+;
+;    MAPPOINTS_TWO_MISSING: in, optional, hidden, private
+;        Depreciated.
+;
+;    BWRDIFF: in, optional, type=boolean
+;       A blue-white-red colourbar (for differences).
+;        Overides COLOURTABLE keyword.
+;    BWR2DIFF: in, optional, type=boolean
+;       An alternate blue-white_red colourbar.
+;        Overides COLOURTABLE keyword.
+;    BGRDIFF: in, optional, type=boolean
+;       Blue-grey-red colourbar.
+;        Overides COLOURTABLE keyword.
+;    RED: in, optional, type=boolean
+;       White -> red -> black colourbar.
+;        Overides COLOURTABLE keyword.
+;    GREEN: in, optional, type=boolean
+;       White -> green -> black colourbar.
+;        Overides COLOURTABLE keyword.
+;    BLUE: in, optional, type=boolean
+;       White -> blue -> black colourbar.
+;        Overides COLOURTABLE keyword.
 ;      
-;    COLOUR_TOO_LOW:  The colour used for z data below range[0]. 
-;    COLOUR_TOO_HIGH: The colour used for z data above range[1].
-;    COLOUR_MISSING:  The colour used for missing z data.
-;          These colours can be defined by a string, or an RGB
-;             3-byte array.
 ;
 ;
-; :OPTIONAL MAPPING KEYWORDS (require x and y to be set):
-;    /CONTINENTS:       Overplot continent outlines.
-;    /HIRES:            Make the outlines high-resolution.
-;    MAP_PROJECTION:    Warp the image to named map-projection.
-;    CENTER_LATITUDE:   Centre the map on this latitude and
-;    CENTER_LONGITUDE:     longitude.
+;   Mapping Keywords (require x and y to be set)
+;   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;
 ;       For further details of map projections, consult the IDL
-;         help documention for MAP(). Alterations to the map,
+;         help documention for `MAP`. Alterations to the map,
 ;         grid, and continents can be achieved after plotting by
 ;         using the OBJECTS structure passed back by keyword.
 ;
-;
-; :HATCHING:
-;    HATCH_THIS:        An array of elements to hatch.
-;
-;
-; :WINDOW KEYWORDS:
-;     LAYOUT, CURRENT, DIMENSIONS, NAME, WINDOW_TITLE work
-;       exactly the same way as for the PLOT() and IMAGE() IDL
-;       functions, so consult the documentation for that.
-;
-;     /DONT_REFRESH: Don't refresh the window before exiting.
-;
-;     PLOT_POSITION: The relative position of the image.
-;     CBAR_POSITION: The relative position of the colourbar.
-;       Position values should be 4 element floats with values
-;          ranging from 0->1 [left,bottom,right,top]. UNLIKE
-;          THE POSITION KEYWORD FOR PLOT() AND IMAGE(), THESE
-;          POSITIONS ARE RELATIVE TO THE LAYOUT KEYWORD IF SET.
+;    CONTINENTS: in, optional, type=boolean
+;       Overplot continent outlines.
+;    HIRES: in, optional, type=boolean
+;       Make the outlines high-resolution.
+;    MAP_PROJECTION: in, optional, type=string
+;       Warp the image to named map-projection.
+;    CENTER_LATITUDE: in, optional, type=float
+;       Centre the map on this latitude
+;    CENTER_LONGITUDE: in, optional, type=float
+;       Centre the map on this longitude.
+;    LIMIT: in, optional, type=float
+;       A 4-element array giving [lat_min, lon_min, lat_max, lon_max]
 ;
 ;
 ;
+;   Position Keywords
+;   ~~~~~~~~~~~~~~~~~
+; 
+;    PLOT_POSITION: in, optional, type="FLTARR(4)"
+;        The relative position of the image.
+;          Position values should be 4 element floats with values
+;          ranging from 0->1 [left,bottom,right,top]. Unlike
+;          the position keyword for `PLOT` and `IMAGE`, this
+;          position is relative to the layout keyword if set.
 ;
-; :COOL EXAMPLES:
-;    IDL> ip = IMAGE_PLOT_F( /TEST )
+;    CBAR_POSITION: in, optional, type="FLTARR(4)"
+;        The relative position of the colourbar.
+;          Position values should be 4 element floats with values
+;          ranging from 0->1 [left,bottom,right,top]. Unlike
+;          the position keyword for `PLOT` and `IMAGE`, this
+;          position is relative to the layout keyword if set.
+;
+;   Window Keywords
+;   ~~~~~~~~~~~~~~~
+;
+;    DONT_REFRESH: in, optional, type=boolean, default=0
+;      Don't refresh the window before exiting.
 ;
 ;
-; :DEPENDENCIES:
-;    HATCH_THIS_FG()  - EODG function to add hatching to function graphics.
-;    IP_GET_POSITION()- Helper function to define the plot position.
-;    IP_GET_BYTE_COLOUR() - Helper function to turn string into an RGB bytearr.
+;   The following keywords are passed in exactly the same way 
+;   as for the `PLOT` and `IMAGE` IDL functions, so consult the
+;   documentation for that.
+;
+;    BUFFER: in, optional, type=boolean
+;
+;    CURRENT: in, optional, type=boolean
+;
+;    DIMENSIONS: in, optional
+;
+;    LAYOUT: in, optional
+;
+;    NAME: in, optional
+;
+;    WINDOW_TITLE: in, optional
+;
+;
+;   Miscellaneous Keywords
+;   ~~~~~~~~~~~~~~~~~~~~~~
+;   
+;    OBJECTS: out, optional, type=objref
+;      A structure containing objects created by the routine.
+;      Useful for subsequent plot modification.
+;
+;    TEST: in, optional, type=boolean
+;      Create a test plot showing off fancy things.
+;
+;    MAP_BUG_TEST: in, optional, type=boolean
+;      Test to see if bug in map code is ok.
+;
+;    DEBUG: in, optional, type=boolean
+;      Don't leave routine on error.
+;
+;    STOP: in, optional, type=boolean
+;      Stop immediately before returning from code.
+; 
 ;    
 ;
 ;
-; :KNOWN ISSUES:
+;
+; :Examples:
+;
+;    ::
+;      ip = IMAGE_PLOT_F( /TEST )
+;
+;
+;    .. image:: image_plot_f.png
+;
+;
+; :USES:
+;    `HATCH_THIS_FG`
+;    `IP_GET_POSITION`
+;    `IP_GET_BYTE_COLOUR`
+;    
+;
+;
+; :BUGS:
 ;
 ;    * Mapping with the 'Geographic' projection causes problems if
 ;       the data crosses the international date line.
-;    * /BUFFER needs to be added.
+;
 ;    * Hatching can be problematic for fancy projections such as
 ;       Interupted Goode.
 ;
+; :AUTHOR:
+;    Andy Smith  (smith [at] atm.ox.ac.uk / aja.smith [at] gmail.com)
 ;
 ; :HISTORY:
 ;    08 NOV 2013 (AJAS) First attempt at simple version. Only 2d fields.
+;
 ;    11 NOV 2013 (AJAS) Map projections added. Simple image tests seem ok.
+;
 ;    13 NOV 2013 (AJAS) Images ok as well.
+;
 ;    14 NOV 2013 (AJAS) Documentation added.
+;
 ;    22 JAN 2014 (AJAS) Only apply taper to colourbar if range is set.
 ;                       Added a work-around for map projection errors.
+;
 ;    31 JAN 2014 (AJAS) Added /SHOW_KEY_MISSING keyword.
 ;                       Can now cope with reversed axes order e.g. [1 -> -1].
 ;                       Attempted to fix map plotting across the international
 ;                        date line. Sort of works, but can lead to white space.
+;
 ;    03 FEB 2014 (AJAS) Removed XRANGE and YRANGE keywords, since image doesn't
 ;                        deal correctly with ranges that aren't exactly on the
 ;                        boundary of a pixel. Corrected bug in reverse axes.
+;
 ;    12 FEB 2014 (AJAS) Speeded up the colour indexing for 2D arrays using
 ;                        array operations instead of looping pixel by pixel.
+;
 ;    05 MAR 2014 (AJAS) Moved position keyword into a separate routine (incase
 ;                        wrapping routines (e.g. future mappoints_f) want to
 ;                        know the image dimensions before generating data.
+;
 ;    18 AUG 2014 (AJAS) Added support for hatching pixels using HATCH_THIS
 ;                        keyword.
+;
 ;    20 AUG 2014 (AJAS) Forced array passed to IMAGE() to be of type BYTE when
 ;                        using maps since the interpolation could do strange
 ;                        things to colours close to white otherwise.
+;
 ;    10 OCT 2014 (AJAS) Added MAPPOINTS_TWO_MISSING keyword to allow a second
 ;                        missing value (can be used as a land mask). Designed
 ;                        only to be called from MAPPOINTS() so will remain
 ;                        undocumented.
+;
 ;    15 OCT 2014 (AJAS) Set the colour dimension of the image to be the 0th
 ;                        dimension, so that images with an x- or y-dimension
 ;                        of 3 or 4 don't have the wrong elements selected as
 ;                        the RGB or RGBA channel.
+;
 ;    22 OCT 2014 (AJAS) Added /BUFFER keyword.
+;
 ;    04 DEC 2014 (AJAS) Disabled refreshing during modifications to the image
 ;                        object so save rendering time.
+;
 ;    12 DEC 2014 (AJAS) Added /DONT_REFRESH keyword.
+;
 ;    06 JAN 2015 (AJAS) Added /TRANSPARENT_MISSING keyword. The keyword
 ;                        MAPPOINTS_TWO_MISSING is depreciated. Removed calls
 ;                        to IDL_VERSION_GE().
 ;
+;    19 JAN 2015 (AJAS) Changed documentation to rst format.
 ;
 ;
 ;-
