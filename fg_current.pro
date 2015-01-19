@@ -31,14 +31,14 @@
 ;
 ;
 ; :EXAMPLES:
+;   :
+;     ;; Create the same plot twice.
+;     plot_object_0 = PLOT( [0, 5] )
+;     plot_object_0 = PLOT( [0, 5] )
 ;
-;   ;; Create the same plot twice.
-;   plot_object_0 = PLOT( [0, 5] )
-;   plot_object_0 = PLOT( [0, 5] )
-;
-;   ;; Now use FG_CURRENT to clear instead of creating a new one.
-;   plot_object_1 = PLOT( [0,5], CURRENT=FG_CURRENT(plot_object_1) )
-;   plot_object_1 = PLOT( [0,5], CURRENT=FG_CURRENT(plot_object_1) )
+;     ;; Now use FG_CURRENT to clear instead of creating a new one.
+;     plot_object_1 = PLOT( [0,5], CURRENT=FG_CURRENT(plot_object_1) )
+;     plot_object_1 = PLOT( [0,5], CURRENT=FG_CURRENT(plot_object_1) )
 ;
 ;
 ;
