@@ -3,7 +3,8 @@
 ; :NAME:
 ;   IP_GET_POSITION
 ;
- FUNCTION IP_GET_POSITION, flag_cb, layout, plot_position_in, cbar_position_in
+ FUNCTION IP_GET_POSITION, flag_cb, layout, plot_position_in, $
+                           cbar_position_in, HELP=help
 ;+
 ;
 ;
@@ -18,6 +19,48 @@
 ; :CATEGORIES:
 ;    Function graphics, image_plot
 ;
+;
+; :PARAMS:
+;    flag_cb: in, required, type=byte
+;       The `IMAGE_PLOT_F` colour bar flag::
+;
+;         ===  =================
+;         Bit  Description
+;         ===  =================
+;          0   No colour bar
+;          1   Sidebar
+;          2   Colour bar
+;          4   Missing indicator
+;         ===  =================
+;
+;    layout: in, required, type=intarr(3)
+;       The layout matching the layout keyword in the `PLOT` function::
+;
+;          [nx, ny, index].
+;
+;    plot_position_in: in, optional, type=fltarr(4)
+;       The position of the main plot assuming a layout of [1,1,1].
+;    cbar_position_in: in, optional, type=fltarr(4)
+;       The position of the colour bar assuming a layout of [1,1,1].
+;       
+;
+; :RETURNS:
+;    A structure containing three position vectors::
+;
+;            PLOT            FLOAT     Array[4]
+;            COLOURBAR       FLOAT     Array[4]
+;            MISSING         FLOAT     Array[4]
+;
+;    These will be relative normal positions taking into account the
+;    `LAYOUT`.
+;
+;
+; :KEYWORDS:
+;    help: in, optional, type=boolean
+;          Load the help page for this routine.
+;
+;       
+;
 ; :AUTHOR:
 ;    Andy Smith  (smith [at] atm.ox.ac.uk / aja.smith [at] gmail.com)
 ;
@@ -26,6 +69,13 @@
 ;
 ;      05 MAR 2014 (AJAS) Created by moving code from `IMAGE_PLOT_F`.
 ;-
+    ON_ERROR, 2
+
+    
+    IF KEYWORD_SET(help) THEN BEGIN
+       FG_HELP, 'ip_get_position'
+       RETURN, 0
+    ENDIF
 
     CASE (flag_cb MOD 4) OF
        0: BEGIN ;; No colourbar

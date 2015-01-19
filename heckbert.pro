@@ -46,6 +46,11 @@
 ;          The number of ticks wanted in the given range.
 ;
 ;
+; :KEYWORDS:
+;    help: in, optional, type=boolean
+;          Load the help page for this routine.
+;
+;
 ; :RETURNS:
 ;     An array of `n` tick points for the given `range_in`.
 ;     Tick points may be outside the range if this improves
@@ -68,7 +73,13 @@
 ;
 ;
 ;-
- FUNCTION HECKBERT, range_in, n
+ FUNCTION HECKBERT, range_in, n, help=help
+
+   IF KEYWORD_SET(help) THEN BEGIN
+      FG_HELP, 'heckbert'
+      RETURN, 0
+   ENDIF
+
 
    IF FINITE(range_in[0]) AND FINITE(range_in[1]) THEN BEGIN
 

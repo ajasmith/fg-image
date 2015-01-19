@@ -1,7 +1,7 @@
 ; docformat = 'rst'
 ;
 ;
- FUNCTION IP_GET_BYTE_COLOUR, colour
+ FUNCTION IP_GET_BYTE_COLOUR, colour, HELP=help
 ;+
 ;
 ;
@@ -11,6 +11,19 @@
 ;
 ; :Categories:
 ;    Function graphics, image_plot
+;
+; :PARAMS:
+;    colour: in, required, type=string/bytarr(3)
+;        A string colour, or an RGB triple.
+;
+; :KEYWORDS:
+;    help: in, optional, type=boolean
+;          Load the help page for this routine.
+;
+;
+; :RETURNS:
+;    A 3 byte array representing the `colour`. If `colour` isn't recognised
+;    then black [0,0,0] is returned.
 ;
 ; :Examples:
 ; 
@@ -30,6 +43,13 @@
 ;    Andy Smith  (smith [at] atm.ox.ac.uk / aja.smith [at] gmail.com)
 ;
 ;-
+
+  ON_ERROR, 2
+
+  IF KEYWORD_SET(help) THEN BEGIN
+     FG_HELP, 'ip_get_byte_colour'
+     RETURN, 0
+  ENDIF
    
   ; Get the variable type. We only deal with integers, floats and strings.
   s = SIZE( /TYPE, colour )

@@ -3,7 +3,7 @@
 ; :NAME:
 ;   fg_colours
 ;
-FUNCTION FG_COLOURS, width
+FUNCTION FG_COLOURS, width, HELP=help
 ;+
 ;
 ; 
@@ -22,6 +22,10 @@ FUNCTION FG_COLOURS, width
 ;    width: in, optional, type=integer, default=600
 ;           The width of the window.
 ;
+; :Keywords:
+;    help: in, optional, type=boolean
+;          Load the help page for this routine.
+;
 ; :Examples:
 ;   Create a list of all colours:: 
 ;       IDL> f = FG_COLOURS()
@@ -33,6 +37,13 @@ FUNCTION FG_COLOURS, width
 ;
 ; 
 ;-
+  ON_ERROR, 2
+  
+  IF KEYWORD_SET(help) THEN BEGIN
+     FG_HELP, 'fg_colours'
+     RETURN, 0
+  ENDIF
+
 
   c = TAG_NAMES( !COLOR )
   n = N_ELEMENTS( c )

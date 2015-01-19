@@ -128,6 +128,7 @@
                      LAYOUT=layout, $
                      ;; Everything else.
                      OBJECTS=object, $
+                     HELP=help, $
                      DEBUG=debug, $
                      STOP=stop, $
                      TEST=test, $
@@ -232,6 +233,9 @@
 ;    OBJECTS: out, optional, type=objref
 ;      A structure containing objects created by the routine.
 ;      Useful for subsequent plot modification.
+;    HELP: in, optional, type=boolean
+;          Load the help page for this routine.
+;
 ;    TEST: in, optional, type=boolean
 ;      An example plot.
 ;    DEBUG: in, optional, type=boolean
@@ -296,6 +300,13 @@
 
    ;; Make sure we're using at least IDL 8.3.
    IF FLOAT(!VERSION.release) LT 8.3 THEN MESSAGE,'Requires IDL 8.3 or higher'
+
+   ;; Load help if required.
+   IF KEYWORD_SET(help) THEN BEGIN
+      FG_HELP, 'mappoints'
+      RETURN, 0
+   ENDIF
+
 
    ;; Data for the test keyword.
    IF KEYWORD_SET( test ) THEN BEGIN

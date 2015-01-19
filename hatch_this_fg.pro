@@ -1,6 +1,6 @@
 ; docformat = 'rst'
 ;
-FUNCTION HATCH_THIS_FG, nx, ny, q, image_object
+FUNCTION HATCH_THIS_FG, nx, ny, q, image_object, HELP=help
 ;+
 ;
 ;  .. image:: hatch_this_fg.png
@@ -22,6 +22,10 @@ FUNCTION HATCH_THIS_FG, nx, ny, q, image_object
 ;        Elements of image to hatch (as given by `WHERE`).
 ;    image_object: in, required, type=objref
 ;        An `IMAGE` object on which to hatch.
+;
+; :KEYWORDS:
+;    help: in, optional, type=boolean
+;          Load the help page for this routine.
 ;
 ; :RETURNS:
 ;    An 2 element array of `POLYGON` object references. 
@@ -53,6 +57,11 @@ FUNCTION HATCH_THIS_FG, nx, ny, q, image_object
 ;-
 
   ON_ERROR, 2
+
+  IF KEYWORD_SET(help) THEN BEGIN
+     FG_HELP, 'hatch_this_fg'
+     RETURN, 0
+  ENDIF
 
   ; WHERE( ) returns -1 for no values found.
   IF q[0] EQ -1 THEN RETURN, -1

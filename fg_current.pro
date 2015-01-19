@@ -1,7 +1,7 @@
 ; docformat = 'rst'
 ;
 ;
- FUNCTION FG_CURRENT, id
+ FUNCTION FG_CURRENT, id, HELP=help
 ;+
 ;
 ;
@@ -18,6 +18,10 @@
 ; :PARAMS:
 ;   id: in, optional, type=objref
 ;       Object reference for a function graphics plot or window.
+;
+; :KEYWORDS:
+;   help: in, optional, type=boolean
+;         Load the help page for this routine.
 ;
 ;
 ; :RETURNS:
@@ -48,7 +52,13 @@
 ;   10 OCT 2014 (AJAS) More sensible test for FG object, using ISA().
 ;
 ;-
-   
+    ON_ERROR, 2
+
+    IF KEYWORD_SET(help) THEN BEGIN
+       FG_HELP, 'fg_current'
+       RETURN, 0
+    ENDIF
+ 
     ;; If there's an error, return current=0.
     CATCH, Error_status
     IF Error_status NE 0 THEN BEGIN

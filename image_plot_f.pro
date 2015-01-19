@@ -47,6 +47,7 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
                         WINDOW_TITLE=window_title, $
                         ;; RELEVANT OBJECTS e.g. map, colourbar, etc.
                         OBJECTS=objects, $
+                        HELP=help, $
                         ;; Example call
                         TEST=test, $
                         ;; Debugging
@@ -257,6 +258,9 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
 ;      A structure containing objects created by the routine.
 ;      Useful for subsequent plot modification.
 ;
+;    HELP: in, optional, type=boolean
+;          Load the help page for this routine.
+;      
 ;    TEST: in, optional, type=boolean
 ;      Create a test plot showing off fancy things.
 ;
@@ -365,6 +369,12 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
 
 
     IF FLOAT(!VERSION.release) LT 8.1 THEN MESSAGE,'Requires IDL 8.1 or higher'
+
+    IF KEYWORD_SET(help) THEN BEGIN
+       FG_HELP, 'image_plot_f'
+       RETURN, 0
+    ENDIF
+
 
     IF KEYWORD_SET( test ) THEN BEGIN
 ;+
