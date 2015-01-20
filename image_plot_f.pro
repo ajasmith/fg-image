@@ -21,7 +21,6 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
                         COLOUR_TOO_HIGH=cth,$
                         COLOUR_MISSING=cm, $
                         TRANSPARENT_MISSING=transparent_missing, $
-                        MAPPOINTS_TWO_MISSING=mappoints_two_missing, $
                         NCOLOURS=ncolours, CBAR_TITLE=cbar_title,$
                         SIDEBAR=sidebar, COLOURBAR=colourbar, $
                         HIDE_TAPER=hide_taper, $
@@ -163,8 +162,6 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
 ;        The colour used for missing z data.
 ;        Can be defined by a string or an RGB 3-byte array.
 ;
-;    MAPPOINTS_TWO_MISSING: in, optional, hidden, private
-;        Depreciated.
 ;
 ;    BWRDIFF: in, optional, type=boolean
 ;       A blue -> white -> red colourbar (for differences).
@@ -316,32 +313,33 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
 ;    22 JAN 2014 (AJAS) Only apply taper to colourbar if range is set.
 ;                       Added a work-around for map projection errors.
 ;
-;    31 JAN 2014 (AJAS) Added /SHOW_KEY_MISSING keyword.
+;    31 JAN 2014 (AJAS) Added `SHOW_KEY_MISSING` keyword.
 ;                       Can now cope with reversed axes order e.g. [1 -> -1].
 ;                       Attempted to fix map plotting across the international
 ;                        date line. Sort of works, but can lead to white space.
 ;
-;    03 FEB 2014 (AJAS) Removed XRANGE and YRANGE keywords, since image doesn't
-;                        deal correctly with ranges that aren't exactly on the
-;                        boundary of a pixel. Corrected bug in reverse axes.
+;    03 FEB 2014 (AJAS) Removed `XRANGE` and `YRANGE` keywords, since image 
+;                        doesn't deal correctly with ranges that aren't exactly
+;                        on the boundary of a pixel. Corrected bug in reverse 
+;                        axes.
 ;
 ;    12 FEB 2014 (AJAS) Speeded up the colour indexing for 2D arrays using
 ;                        array operations instead of looping pixel by pixel.
 ;
 ;    05 MAR 2014 (AJAS) Moved position keyword into a separate routine (incase
-;                        wrapping routines (e.g. future mappoints_f) want to
+;                        wrapping routines (e.g. future `mappoints_f`) want to
 ;                        know the image dimensions before generating data.
 ;
-;    18 AUG 2014 (AJAS) Added support for hatching pixels using HATCH_THIS
+;    18 AUG 2014 (AJAS) Added support for hatching pixels using `HATCH_THIS`
 ;                        keyword.
 ;
-;    20 AUG 2014 (AJAS) Forced array passed to IMAGE() to be of type BYTE when
+;    20 AUG 2014 (AJAS) Forced array passed to `IMAGE` to be of type `BYTE` when
 ;                        using maps since the interpolation could do strange
 ;                        things to colours close to white otherwise.
 ;
-;    10 OCT 2014 (AJAS) Added MAPPOINTS_TWO_MISSING keyword to allow a second
+;    10 OCT 2014 (AJAS) Added `MAPPOINTS_TWO_MISSING` keyword to allow a second
 ;                        missing value (can be used as a land mask). Designed
-;                        only to be called from MAPPOINTS() so will remain
+;                        only to be called from `MAPPOINTS` so will remain
 ;                        undocumented.
 ;
 ;    15 OCT 2014 (AJAS) Set the colour dimension of the image to be the 0th
@@ -349,18 +347,20 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
 ;                        of 3 or 4 don't have the wrong elements selected as
 ;                        the RGB or RGBA channel.
 ;
-;    22 OCT 2014 (AJAS) Added /BUFFER keyword.
+;    22 OCT 2014 (AJAS) Added `BUFFER` keyword.
 ;
 ;    04 DEC 2014 (AJAS) Disabled refreshing during modifications to the image
 ;                        object so save rendering time.
 ;
-;    12 DEC 2014 (AJAS) Added /DONT_REFRESH keyword.
+;    12 DEC 2014 (AJAS) Added `DONT_REFRESH` keyword.
 ;
-;    06 JAN 2015 (AJAS) Added /TRANSPARENT_MISSING keyword. The keyword
-;                        MAPPOINTS_TWO_MISSING is depreciated. Removed calls
-;                        to IDL_VERSION_GE().
+;    06 JAN 2015 (AJAS) Added `TRANSPARENT_MISSING` keyword. The keyword
+;                        `MAPPOINTS_TWO_MISSING` is depreciated. Removed calls
+;                        to `IDL_VERSION_GE`.
 ;
 ;    19 JAN 2015 (AJAS) Changed documentation to rst format.
+;
+;    20 JAN 2015 (AJAS) Removed the `MAPPOINTS_TWO_MISSING` keyword.
 ;
 ;
 ;-
@@ -452,19 +452,8 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
        'Image has incorrect number of dimensions (2 or 3).'
 
     ;; Set missing value if not there.
-    ;; Need a special case when passing 2 missing values from mappoints.
-    IF KEYWORD_SET(mappoints_two_missing) THEN BEGIN
-       MESSAGE,/CONTINUE,'Warning: The MAPPOINTS_TWO_MISSING keyword has been depreciated and will be removed from use soon. MAPPOINTS has been updated to reflect this so you are probably using an old version if you are seeing this message.'
-       IF N_ELEMENTS( missing ) NE 2 || $
-          ~ ARRAY_EQUAL(SIZE(cm),[2,3,2,1,6]) THEN MESSAGE, $
-       'Expecting 2 MISSING values when the MAPPOINTS_TWO_MISSING flag is set.'
-       missing2 = missing[1]
-       missing  = missing[0]
-       c_missing2 = cm[*,1]
-       cm         = cm[*,0]
-    ENDIF ELSE BEGIN
-       IF N_ELEMENTS( missing ) NE 1 THEN missing = !VALUES.F_NAN
-    ENDELSE
+    IF N_ELEMENTS( missing ) NE 1 THEN missing = !VALUES.F_NAN
+
     ;; If no window title is given, make it 'Image Plot'
     IF ~ KEYWORD_SET( window_title ) THEN window_title='Image Plot'
 
@@ -713,15 +702,6 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
        q_missing = WHERE( points EQ missing OR ~FINITE(points), n_missing )
        IF n_missing GT 0 THEN index[q_missing] = ncolours+2
 
-       IF KEYWORD_SET( mappoints_two_missing ) THEN BEGIN
-          r = [r, c_missing2[0] ]
-          g = [g, c_missing2[1] ]
-          b = [b, c_missing2[2] ]
-          m = [m, 0B]
-
-          q_missing2 = WHERE( points EQ missing2, n_missing2 )
-          IF n_missing2 GT 0 THEN index[q_missing2] = ncolours+3
-       ENDIF
 
        ;; Build the image.
        im = KEYWORD_SET( transparent_missing ) ? $

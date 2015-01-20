@@ -271,25 +271,25 @@
 ;
 ;    02 Sep 2014 (AJAS) Documented and added to EODG library.
 ;
-;    10 Oct 2014 (AJAS) COLOUR_LAND AND /TEST keyword added.
+;    10 Oct 2014 (AJAS) `COLOUR_LAND` AND `TEST` keywords added.
 ;
-;    14 Oct 2014 (AJAS) Fixed bug when using CBAR_VALUES keyword.
+;    14 Oct 2014 (AJAS) Fixed bug when using `CBAR_VALUES` keyword.
 ;
 ;    20 Nov 2014 (AJAS) Modified land colour so that clon is no longer
 ;         passed to map_proj_init unless defined by the user.
 ;
-;    11 Dec 2014 (AJAS) Added LAYOUT keyword explicitly to reduce overly
+;    11 Dec 2014 (AJAS) Added `LAYOUT` keyword explicitly to reduce overly
 ;         large images generated for many plots in the same window.
 ;         Reduced default image resolution.
 ;
 ;    12 Dec 2014 (AJAS) Check that range is finite before plotting: otherwise
-;         we get stuck in an infinite loop inside HECKBERT() function.
+;         we get stuck in an infinite loop inside `HECKBERT` function.
 ;         Disabled refreshing until the very end. 
 ;
 ;    06 Jan 2015 (AJAS) Modified colour usage: missing colour is now dealt
 ;         with by being transparent. As a result, it is actually the back-
-;         ground colour defined in IMAGE_PLOT_F. Similarly, this makes the
-;         COLOUR_LAND keyword set the mapcontinents object's colour.
+;         ground colour defined in `IMAGE_PLOT_F`. Similarly, this makes the
+;         `COLOUR_LAND` keyword set the mapcontinents object's colour.
 ;
 ;
 ;
