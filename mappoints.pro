@@ -206,7 +206,7 @@
 ;    CENTER_LATITUDE: in, optional, type=numeric
 ;    CENTER_LONGITUDE:in, optional, type=numeric
 ;    HIRES: in, optional, type=boolean, default=0
-;    LIMIT: in, optional, type=FLTARR(4)
+;    LIMIT: in, optional, type=fltarr(4)
 ;      A 4-element array containing [lat_min,lon_min,lat_max,lon_max].
 ;    NOCONTINENTS: in, optional, type=boolean, default=0
 ;      Don't draw the outline of continents on the plot.

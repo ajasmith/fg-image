@@ -58,9 +58,9 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
 ;+
 ;
 ;    Recreates the functionality of `IMAGE_PLOT` using function
-;    graphics (using IDL function `IMAGE` instead of Coyote's `TVSCALE`).
-;    This routine is only suitable for IDL versions 8.1 and
-;    above.
+;    graphics (using the IDL function `IMAGE` instead of Coyote's
+;     `TVSCALE`). This routine is only suitable for IDL versions 8.1 
+;    and above.
 ;
 ;
 ; :Categories:
@@ -127,7 +127,7 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
 ;        COLOUR_MISSING keyword.
 ;    NCOLOURS: in, optional, type=integer, default=30
 ;        The number of colours used in the scale.
-;    COLOURTABLE: in, optional, type=integer/string/byte
+;    COLOURTABLE: in, optional, type="integer/strarr(N)/bytarr(N,3)"
 ;        Either a single colourtable number, an [N,3]
 ;        array of colours (which overrules NCOLOURS), 
 ;        or an N-length array of string names (again
@@ -153,13 +153,13 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
 ;        If a string is passed, this becomes the description.
 ;
 ; 
-;    COLOUR_TOO_LOW: in, optional, type=string/byte 
+;    COLOUR_TOO_LOW: in, optional, type="string/bytarr(3)"
 ;        The colour used for z data below range[0].
 ;        Can be defined by a string or an RGB 3-byte array.
-;    COLOUR_TOO_HIGH: in, optional, type=string/byte
+;    COLOUR_TOO_HIGH: in, optional, type="string/bytarr(3)"
 ;        The colour used for z data above range[1].
 ;        Can be defined by a string or an RGB 3-byte array.
-;    COLOUR_MISSING: in, optional, type=string/byte
+;    COLOUR_MISSING: in, optional, type="string/bytarr(3)"
 ;        The colour used for missing z data.
 ;        Can be defined by a string or an RGB 3-byte array.
 ;
@@ -167,13 +167,13 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
 ;        Depreciated.
 ;
 ;    BWRDIFF: in, optional, type=boolean
-;       A blue-white-red colourbar (for differences).
+;       A blue -> white -> red colourbar (for differences).
 ;        Overides COLOURTABLE keyword.
 ;    BWR2DIFF: in, optional, type=boolean
-;       An alternate blue-white_red colourbar.
+;       An alternate blue -> white -> red colourbar.
 ;        Overides COLOURTABLE keyword.
 ;    BGRDIFF: in, optional, type=boolean
-;       Blue-grey-red colourbar.
+;       Blue -> grey -> red colourbar.
 ;        Overides COLOURTABLE keyword.
 ;    RED: in, optional, type=boolean
 ;       White -> red -> black colourbar.
@@ -213,14 +213,14 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
 ;   Position Keywords
 ;   ~~~~~~~~~~~~~~~~~
 ; 
-;    PLOT_POSITION: in, optional, type="FLTARR(4)"
+;    PLOT_POSITION: in, optional, type="fltarr(4)"
 ;        The relative position of the image.
 ;          Position values should be 4 element floats with values
 ;          ranging from 0->1 [left,bottom,right,top]. Unlike
 ;          the position keyword for `PLOT` and `IMAGE`, this
 ;          position is relative to the layout keyword if set.
 ;
-;    CBAR_POSITION: in, optional, type="FLTARR(4)"
+;    CBAR_POSITION: in, optional, type="fltarr(4)"
 ;        The relative position of the colourbar.
 ;          Position values should be 4 element floats with values
 ;          ranging from 0->1 [left,bottom,right,top]. Unlike
