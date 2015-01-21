@@ -42,7 +42,7 @@ PRO FG_HELP, routine, HELP=help
   ;; The final element of the scope traceback is the current routine.
   fg_path = FILE_DIRNAME(st[-1].filename)
 
-  ;; IF routine is not defined, then we open the index.
+  ;; If a routine is not defined, then we open the index.
   r = KEYWORD_SET( routine ) ? STRLOWCASE(routine[0]) : 'index'
 
   ;; Final help file to open. Should be the routine name + .html

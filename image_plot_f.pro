@@ -56,6 +56,9 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
 
 ;+
 ;
+;
+;    .. image:: image_plot_f.png
+;
 ;    Recreates the functionality of `IMAGE_PLOT` using function
 ;    graphics (using the IDL function `IMAGE` instead of Coyote's
 ;     `TVSCALE`). This routine is only suitable for IDL versions 8.1 
@@ -145,7 +148,7 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
 ;    HIDE_COLOURBAR: in, optional, type=boolean, default=0
 ;        Hide the colourbar, but leave the main 
 ;        plot as if the colourbar was set.
-;    SHOW_KEY_MISSING: in, optional, type=boolean, default=0
+;    SHOW_KEY_MISSING: in, optional, type=boolean/string, default=0
 ;        Add a key next to the colour bar showing
 ;        the colour for missing data. This keyword
 ;        has no effect if there is no colour bar.
@@ -186,6 +189,10 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
 ;
 ;   Mapping Keywords (require x and y to be set)
 ;   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;
+;      
+;
+;       .. image:: image_plot_f_map_example.png
 ;
 ;       For further details of map projections, consult the IDL
 ;         help documention for `MAP`. Alterations to the map,
@@ -231,9 +238,13 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
 ;      Don't refresh the window before exiting.
 ;
 ;
+;
+;   Window Keywords passed to IMAGE()
+;   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;
 ;   The following keywords are passed in exactly the same way 
-;   as for the `PLOT` and `IMAGE` IDL functions, so consult the
-;   documentation for that.
+;   as to the `IMAGE` IDL function, so consult the documentation 
+;   for that.
 ;
 ;    BUFFER: in, optional, type=boolean
 ;
@@ -251,9 +262,19 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
 ;   Miscellaneous Keywords
 ;   ~~~~~~~~~~~~~~~~~~~~~~
 ;   
-;    OBJECTS: out, optional, type=objref
+;    OBJECTS: out, optional, type=structure
 ;      A structure containing objects created by the routine.
-;      Useful for subsequent plot modification.
+;      Useful for subsequent plot modification. e.g.::
+;
+;               IDL> HELP, objects
+;               ** Structure <232f4d8>, 6 tags, length=24, data length=22, refs=2:
+;                  IMAGE_PLOT      OBJREF    <ObjHeapVar633433(IMAGE)>
+;                  WINDOW          OBJREF    <ObjHeapVar2766(GRAPHICSWIN)>
+;                  MAPGRID         OBJREF    <ObjHeapVar633434(MAPGRID)>
+;                  CONTINENTS      OBJREF    <ObjHeapVar633491(MAPCONTINENTS)>
+;                  COLOUR_BAR      OBJREF    <ObjHeapVar635928(IMAGE)>
+;                  FLAG_CB         INT              2
+;
 ;
 ;    HELP: in, optional, type=boolean
 ;          Load the help page for this routine.
@@ -280,7 +301,7 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
 ;      ip = IMAGE_PLOT_F( /TEST )
 ;
 ;
-;    .. image:: image_plot_f.png
+;    .. image:: image_plot_f_test.png
 ;
 ;
 ; :USES:
