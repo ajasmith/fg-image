@@ -32,7 +32,8 @@
 ;        IDL> PRINT, IP_GET_BYTE_COLOUR( 'hot pink' )
 ;        255 105 180
 ;
-;    Make sure that the RGB values are correct type.
+;    Make sure that the RGB values are correct type::
+;
 ;        IDL> PRINT, IP_GET_BYTE_COLOUR( [34.2, 15.8, 200.0] )
 ;        34  15 200
 ;
