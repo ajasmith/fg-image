@@ -291,6 +291,9 @@
 ;         ground colour defined in `IMAGE_PLOT_F`. Similarly, this makes the
 ;         `COLOUR_LAND` keyword set the mapcontinents object's colour.
 ;
+;    28 Jan 2015 (AJAS) Found work-around for crossing the International date
+;         line.
+;
 ;
 ;
 ;-
@@ -422,10 +425,19 @@
    !P.BACKGROUND = i_missing
    ERASE
 
+
    xrange = [ limit[1], limit[3] ]
    yrange = [ limit[0], limit[2] ]
 
-   
+   lon360 = lon
+   ;; Check for a limit crossing the international date line.
+   IF xrange[1] LT xrange[0] THEN BEGIN
+      crossIDL=1B
+      xrange[1] += 360
+      lon360[WHERE( lon LT xrange[0], /NULL )] += 360
+   ENDIF ELSE crossIDL=0B
+
+
 
 
    ;; Centre latitude and longitude.
@@ -440,10 +452,10 @@
 
 
    ;; We only need the points that will be within the ranges.
-   ok = WHERE( lat GE yrange[0] AND $
-               lat LE yrange[1] AND $
-               lon GE xrange[0] AND $
-               lon LE xrange[1], nok )
+   ok = WHERE( lat    GE yrange[0] AND $
+               lat    LE yrange[1] AND $
+               lon360 GE xrange[0] AND $
+               lon360 LE xrange[1], nok )
 
 
 
@@ -466,7 +478,7 @@
    IF nok GT 0 THEN BEGIN
       FOR iok=0,nok-1 DO BEGIN
          j = ok[ iok ]
-         MPF_POINT, index[j], lat[j], lon[j], radius, $
+         MPF_POINT, index[j], lat[j], lon360[j], radius, $
                     SHAPE=KEYWORD_SET(square) ? 'Square' : 'Circle'
       ENDFOR
       
