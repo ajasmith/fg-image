@@ -328,7 +328,9 @@
 ;
 ;
 ; :BUGS:
-;    * Plotting across the international date line is temperamental at best.
+;
+;    * The background colour extends beyond the outside of the map
+;      for funky shaped projections (see example figure above).
 ;
 ;
 ; :AUTHOR:
@@ -449,12 +451,28 @@
    IF ~FINITE(range_[0]) || ~FINITE(range_[1]) THEN $
       MESSAGE,'Range is not finite.'+ (KEYWORD_SET(log) ? $
               ' Did you take the log of 0 or a negative number?' : '')
-   
+
 
    ;; Limits of the plotting.
    IF N_ELEMENTS( limit_in ) EQ 4 THEN $
-         limit = limit_in ELSE $
-         limit = [MIN(lat,MAX=max_lat),MIN(lon,MAX=max_lon),max_lat, max_lon]
+         limit = limit_in ELSE BEGIN
+      
+      ;; If we are only near the international date line, we have to
+      ;; be a bit tricky.
+         IF MIN( ABS(lon) ) GE 130 && MIN( lon ) LT 0 THEN BEGIN
+            qmaxlon = WHERE( lon LT 0, COMPLEMENT=qminlon )
+            min_lon = MIN( lon[qminlon] ) ;; Smallest longitude greater than 0
+            max_lon = MAX( lon[qmaxlon] ) ;; Largest longitude less than 0
+            limit = [MIN(lat,MAX=max_lat),min_lon, max_lat, max_lon]
+         ENDIF ELSE BEGIN
+            limit = [MIN(lat,MAX=max_lat),MIN(lon,MAX=max_lon),max_lat, max_lon]
+         ENDELSE
+         
+         ;; Add a buffer of 0.5 degrees because otherwise, the points right 
+         ;; on the edge will get obscured by the box axes.
+         limit += ( [-1,-1,1,1] * 0.5 > [-90,-180,-90,-180] ) < [90,180,90,180]
+   ENDELSE
+
 
 
    ;; Set up our window.
