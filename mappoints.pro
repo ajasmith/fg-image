@@ -4,6 +4,33 @@
 ;   mappoints
 ;
 ;
+;
+; :COPYRIGHT:
+;
+;   The MIT License (MIT)
+;
+;   Copyright (c) 2015 Andy Smith <aja.smith (at) gmail.com>
+;
+;   Permission is hereby granted, free of charge, to any person obtaining a copy
+;   of this software and associated documentation files (the "Software"), to deal
+;   in the Software without restriction, including without limitation the rights
+;   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+;   copies of the Software, and to permit persons to whom the Software is
+;   furnished to do so, subject to the following conditions:
+;
+;   The above copyright notice and this permission notice shall be included in all
+;   copies or substantial portions of the Software.
+;
+;   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+;   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+;   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+;   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+;   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+;   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+;   SOFTWARE.
+;
+;
+;
 ; 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -13,7 +40,26 @@
  ; this after we are done (or if there's an error).
  FUNCTION mpf_plot_begin_save
 ;+
+;
+; Preserve the input device graphics state and so that we can return to 
+; this after we are done.
+;
+; :RETURNS:
+;    A structure containing the `!X`, `!Y`, `!P`, device name, and current
+;    colour table::
+;
+;        IDL> HELP, mpf_plot_begin_save()
+;        ** Structure <89a3f48>, 5 tags, length=4912, data length=4880, refs=1:
+;        X               STRUCT    -> !AXIS Array[1]
+;        Y               STRUCT    -> !AXIS Array[1]
+;        P               STRUCT    -> !PLT Array[1]
+;        MY_DEVICE       STRING    'X'
+;        CT              BYTE      Array[256, 3]
+; 
+;
 ; :HIDDEN:
+;
+; 
 ;-
    COMPILE_OPT hidden, idl2
    ON_ERROR, 2
@@ -23,8 +69,17 @@
    RETURN, {x:!x,y:!y,p:!p,my_device:!D.NAME,ct:ct}
  END
 
+
  PRO mpf_plot_reset, deviceGraphicStruct
 ;+
+;
+; Used to reset the device graphics to it's prior state (minus a wiped
+;  z-buffer. It takes as input the structure created by 
+;  `mpf_plot_begin_save`
+;
+; :PARAMS:
+;    deviceGraphicStruct: in, type=structure
+;
 ; :HIDDEN:
 ;-
    COMPILE_OPT hidden, idl2
@@ -42,9 +97,24 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
- ; Draws a single point in the z-buffer using POLYFILL.
  PRO mpf_point, value, lat, lon, radius, SHAPE=shape
 ;+
+;  Draws a single point in the z-buffer using POLYFILL.
+;
+; :PARAMS:
+;    value: in, type=byte
+;      A byte value representing a colour index.
+;    lat: in, type=float
+;      A latitude for the data point.
+;    lon: in, type=float
+;      A longitude for the data point.
+;    radius: in, optional, type=float, default=120.0
+;      The radius of the data point (in km)
+;
+; :KEYWORDS:
+;    shape: in, optional, type='string', default='circle'
+;      The shape of the plotted point.
+;    
 ; :HIDDEN:
 ;-
    COMPILE_OPT hidden, idl2
