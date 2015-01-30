@@ -52,6 +52,9 @@ PRO FG_HELP, routine, HELP=help
 ; :HISTORY:
 ;    19 Jan 2015 (AJAS) Created.
 ;
+;    30 Jan 2015 (AJAS) Made paths platform independent using `FILEPATH` 
+;                       and added spawning in OSX and Windows (untested).
+;
 ;-
 
   ON_ERROR, 2
@@ -73,12 +76,18 @@ PRO FG_HELP, routine, HELP=help
   r = KEYWORD_SET( routine ) ? STRLOWCASE(routine[0]) : 'index'
 
   ;; Final help file to open. Should be the routine name + .html
-  f = fg_path + '/doc/'+r+'.html'
+  f = FILEPATH(r+'.html', ROOT_DIR=fg_path, SUBDIRECTORY=['doc'] )
+
 
   ;; Check that it exists.
   IF FILE_TEST( f ) THEN BEGIN
      ;; And spawn a browser.
-     SPAWN, 'xdg-open '+f, listing, EXIT_STATUS=exit_status
+     CASE STRLOWCASE(STRMID(!VERSION.os,0,3)) OF
+        'lin':  SPAWN,'xdg-open '+f, listing, EXIT_STATUS=exit_status
+        'dar': SPAWN, 'open -a safari '+f, listing, EXIT_STATUS=exit_status
+        'win': SPAWN, 'start "" "'+f+'"', listing, EXIT_STATUS=exit_status
+        ELSE: MESSAGE, 'Unknown architecture.'
+     ENDCASE
   ENDIF ELSE exit_status=1
 
   IF exit_status NE 0 THEN $
