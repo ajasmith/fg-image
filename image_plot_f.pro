@@ -88,7 +88,7 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
 ;
 ;    Recreates the functionality of `IMAGE_PLOT` using function
 ;    graphics (using the IDL function `IMAGE` instead of Coyote's
-;     `TVSCALE`). This routine is only suitable for IDL versions 8.1 
+;     `TVSCALE`). This routine is only suitable for IDL versions 8.2 
 ;    and above.
 ;
 ;
@@ -411,6 +411,10 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
 ;    20 JAN 2015 (AJAS) Removed the `MAPPOINTS_TWO_MISSING` keyword.
 ;
 ;
+;
+; :REQUIRES:
+;    8.1
+; 
 ;-
 
     ON_ERROR, KEYWORD_SET( debug ) ? 0 : 2

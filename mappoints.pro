@@ -196,6 +196,7 @@
                      CURRENT=current, $
                      DIMENSIONS=dimensions, $
                      LAYOUT=layout, $
+                     WINDOW_TITLE=window_title, $
                      ;; Everything else.
                      OBJECTS=object, $
                      HELP=help, $
@@ -297,6 +298,8 @@
 ;
 ;    LAYOUT: in, optional
 ;
+;    WINDOW_TITLE: in, optional
+;
 ;  Miscellaneous options
 ;  ~~~~~~~~~~~~~~~~~~~~~
 ;    
@@ -366,8 +369,13 @@
 ;    28 Jan 2015 (AJAS) Found work-around for crossing the International date
 ;         line.
 ;
+;    05 Feb 2015 (AJAS) `WINDOW_TITLE` keyword now works.
 ;
 ;
+;
+; :REQUIRES:
+;    8.3
+; 
 ;-
 
    ON_ERROR, KEYWORD_SET( debug ) ? 0 : 2

@@ -61,6 +61,8 @@ FUNCTION FG_COLOURS, width, HELP=help
 ; :AUTHOR:
 ;    Andy Smith  (smith [at] atm.ox.ac.uk / aja.smith [at] gmail.com)
 ;
+; :REQUIRES:
+;    8.0
 ; 
 ;-
   ON_ERROR, 2

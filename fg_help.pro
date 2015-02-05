@@ -55,6 +55,10 @@ PRO FG_HELP, routine, HELP=help
 ;    30 Jan 2015 (AJAS) Made paths platform independent using `FILEPATH` 
 ;                       and added spawning in OSX and Windows (untested).
 ;
+;
+; :REQUIRES:
+;    8.0
+; 
 ;-
 
   ON_ERROR, 2
@@ -83,7 +87,7 @@ PRO FG_HELP, routine, HELP=help
   IF FILE_TEST( f ) THEN BEGIN
      ;; And spawn a browser.
      CASE STRLOWCASE(STRMID(!VERSION.os,0,3)) OF
-        'lin':  SPAWN,'xdg-open '+f, listing, EXIT_STATUS=exit_status
+        'lin': SPAWN, 'xdg-open '+f, listing, EXIT_STATUS=exit_status
         'dar': SPAWN, 'open -a safari '+f, listing, EXIT_STATUS=exit_status
         'win': SPAWN, 'start "" "'+f+'"', listing, EXIT_STATUS=exit_status
         ELSE: MESSAGE, 'Unknown architecture.'

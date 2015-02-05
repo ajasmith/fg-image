@@ -81,6 +81,10 @@
 ;
 ;   10 OCT 2014 (AJAS) More sensible test for FG object, using ISA().
 ;
+;
+; :REQUIRES:
+;    8.0
+;
 ;-
     ON_ERROR, 2
 

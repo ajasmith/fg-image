@@ -81,6 +81,10 @@ FUNCTION HATCH_THIS_FG, nx, ny, q, image_object, HELP=help
 ;
 ;  19 Jan 2015 (AJAS) Updated documentation.
 ;
+;
+; :REQUIRES:
+;    8.1
+; 
 ;-
 
   ON_ERROR, 2
