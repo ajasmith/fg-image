@@ -32,8 +32,20 @@
 ;
  FUNCTION heckbert_nicenum, x, round
 ;+
+;
+; Find a "nice" number approximately equal to x.
+; Round the number if round is set, otherwise
+; take the ceiling.
+;
+; :PARAMS:
+;    x: in, required, type=float;
+;    round: in, required, type=boolean
+;
+;
 ; :HIDDEN:
 ;-
+
+   COMPILE_OPT hidden, idl2
 
    e = FLOOR( ALOG10( x ) )
    f = x / 10.0^e
@@ -57,7 +69,8 @@
 
 
 ;+
-; Implementation of Heckbert's labeling algorithm.
+; Implementation of Heckbert's labeling algorithm which can be
+; found at `http://tog.acm.org/resources/GraphicsGems/gems/Label.c`
 ;
 ;
 ; :Categories:
