@@ -183,6 +183,7 @@
                      COLOURBAR=colourbar, $
                      CBAR_VALUES=cbar_values, $
                      CBAR_LABELS=cbar_labels, $
+                     HIDE_COLOURBAR=hide_colourbar, $
                      ;; Mapping keywords
                      COLOUR_BACKGROUND=colour_background, $
                      COLOUR_LAND=colour_land, $
@@ -259,6 +260,8 @@
 ;        Include a colourbar to the left of the image.
 ;    COLOURBAR: in, optional, type=boolean, default=0
 ;        Include a colourbar below the image.
+;    HIDE_COLOURBAR: in, optional, type=boolean, default=0
+;        Hide the colourbar, even though a space is left for it.
 ;    CBAR_VALUES: in, optional, type=fltarr()
 ;      Values on the colourbar at which to add ticks.
 ;    CBAR_LABELS: in, optional, type=strarr()
@@ -371,7 +374,7 @@
 ;
 ;    05 Feb 2015 (AJAS) `WINDOW_TITLE` keyword now works.
 ;
-;
+;    25 Feb 2015 (AJAS) Fixed bug with `HIDE_COLOURBAR` keyword.
 ;
 ; :REQUIRES:
 ;    8.3
@@ -605,6 +608,7 @@
    ip = IMAGE_PLOT_F( our_data, lon_grid, lat_grid, $
                       CURRENT=1, $
                       SIDE=sidebar, COLOURBAR=colourbar, $
+                      HIDE_COLOURBAR=KEYWORD_SET(hide_colourbar), $
                       RANGE=[1,ncolours],MISSING=i_missing, $
                       /TRANSPARENT_MISSING, $
                       CENTER_LATITUDE=clat, $
@@ -644,15 +648,14 @@
 
    ;; Do the colourbar after the fact by changing the integer 
    ;; scaling sent to IMAGE_PLOT_F into the actual values.
-   cbar_yes = 0b
    IF KEYWORD_SET( sidebar ) THEN BEGIN
       cbar_i = 1
       cbar_yes = 1b
    ENDIF ELSE IF KEYWORD_SET( colourbar ) THEN BEGIN
-      cbar_ax =  (object.colour_bar.axes)[ 0 ]
       cbar_i = 0 
       cbar_yes = 1b
    ENDIF
+   IF KEYWORD_SET( hide_colourbar ) THEN cbar_yes = 0b
 
 
 

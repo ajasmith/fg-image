@@ -197,6 +197,7 @@ END
 
 ;; Only generate data the first time so comparisons between
 ;; repeated runs are clearer.
+seed = 25
 IF ~ARRAY_EQUAL(SIZE(z),[2,15,15,4,225]) THEN $
    z = SMOOTH( RANDOMU(seed,[15,15])*100-50, 5, /EDGE_WRAP )
 x = FINDGEN(15)*20-140
