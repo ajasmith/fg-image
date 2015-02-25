@@ -192,6 +192,7 @@
                      HIRES=hires, $
                      LIMIT=limit_in, $
                      NOCONTINENTS=nocontinents, $
+                     HIDE_LL=hide_ll, $
                      ;; Window keywords.
                      BUFFER=buffer, $
                      CURRENT=current, $
@@ -284,7 +285,8 @@
 ;      A 4-element array containing [lat_min,lon_min,lat_max,lon_max].
 ;    NOCONTINENTS: in, optional, type=boolean, default=0
 ;      Don't draw the outline of continents on the plot.
-;
+;    HIDE_LL: in, optional, type=boolean, default=0
+;      Hide the latitude and longitude labels.
 ;
 ;  Window Options
 ;  ~~~~~~~~~~~~~~
@@ -644,7 +646,7 @@
    FOREACH l, object.mapgrid.longitudes DO l.LABEL_ANGLE=0
    FOREACH l, object.mapgrid.latitudes  DO l.LABEL_ANGLE=270
 
-
+   IF KEYWORD_SET( hide_ll ) THEN object.mapgrid.label_show = 0
 
    ;; Do the colourbar after the fact by changing the integer 
    ;; scaling sent to IMAGE_PLOT_F into the actual values.
