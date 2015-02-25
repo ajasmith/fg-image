@@ -522,6 +522,7 @@
 
    ;; We plot in greyscale so the value of each pixel will 
    ;; be scaled by IMAGE_PLOT_F to get colours, not by us.
+   PRINT, window_dim * dpcm
    DEVICE, SET_RES=window_dim*dpcm, Z_BUFFER=0,SET_PIXEL_DEPTH=8
    !P.BACKGROUND = i_missing
    ERASE
@@ -650,6 +651,7 @@
 
    ;; Do the colourbar after the fact by changing the integer 
    ;; scaling sent to IMAGE_PLOT_F into the actual values.
+   cbar_yes = 0b
    IF KEYWORD_SET( sidebar ) THEN BEGIN
       cbar_i = 1
       cbar_yes = 1b
