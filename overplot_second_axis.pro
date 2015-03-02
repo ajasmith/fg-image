@@ -48,6 +48,7 @@ FUNCTION OVERPLOT_SECOND_AXIS, plot_object, x, y, y_error, $
 ;
 ;    Overplot data with a different y-range by replacing the right y-axis.
 ;
+;    !!BETA CODE!!
 ;
 ; :RETURNS:
 ;
@@ -142,6 +143,7 @@ FUNCTION OVERPLOT_SECOND_AXIS, plot_object, x, y, y_error, $
 ;    26 Feb 2015 (AJAS) Created initial test version.
 ;
 ;    02 Mar 2015 (AJAS) Bug with /DONT_REDRAW fixed. Documentation added.
+;                       Found a much more sensible way to get the axes.
 ;
 ;-
 
@@ -164,24 +166,23 @@ FUNCTION OVERPLOT_SECOND_AXIS, plot_object, x, y, y_error, $
    CATCH, axisError
    IF axisError THEN BEGIN
       CATCH, /CANCEL
-      MESSAGE, 'The objref passed does not have valid AXES.'
+      MESSAGE, 'The objref passed does not have valid AXIS objects.'
       RETURN, !NULL
    ENDIF
-   ax = plot_object.axes
+   ;; The idl documentation 'Axis References in IDL' reliably informs me that
+   ;; you can use the  plot object as a hash and get back axis1 (always the left
+   ;; y-axis for 2D plot) and axis3 (always right y-axis for a 2D plot).
+   axLeft = plot_object[ 'axis1' ]
+   axRight= plot_object[ 'axis3' ]
+   ;; If we've got this far, stop worrying about axes.
    CATCH, /CANCEL
-   
-   ;; Get the left and right y-axis
-   aloc = []
-   FOREACH a, ax DO aloc = [ aloc, ISA(a,'Axis') ? TOTAL((a.location GT 0)*[1,2,4],/INT) : -1 ]
-   iyLeft = ( WHERE( aloc EQ 2, nLeft ) )[0]
-   iyRight= ( WHERE( aloc EQ 1, nRight) )[0]
-   IF nLeft EQ 0 || nRight EQ 0 THEN MESSAGE, 'Valid y-axes not found.'
+
 
 
    ;; Get the x and y values.
    yplot = N_ELEMENTS( y ) GE 1 ? y : x
    xplot = N_ELEMENTS( y ) GE 1 ? x : LINDGEN(N_ELEMENTS(x))
-   eplot = KEYWORD_SET(yerr_kw) && N_ELEMENTS( y_error) GE 1 ? y_error : !NULL
+   ;; Define eplot below if necessary.
 
 
    IF KEYWORD_SET( dont_redraw ) THEN BEGIN
@@ -189,27 +190,28 @@ FUNCTION OVERPLOT_SECOND_AXIS, plot_object, x, y, y_error, $
       ;; our information from the axes already present.
       ;; We assume that the right axis is what we are using
       ;; for our new scale.
-      yr1 = ax[ iYLeft ].YRANGE
+      yr1 = axLeft.YRANGE
       
       ;; The forward transform is taken from the right y-axis.
-      ct_forward = ax[iYRight].coord_transform
+      ct_forward = axRight.coord_transform
 
       ;; The second apparent y-range is then given by.
-      yr2 = ax[ iYRight].YRANGE * ct_forward[1] + ct_forward[0]
+      yr2 = axRight.YRANGE * ct_forward[1] + ct_forward[0]
 
       ;; So the reverse transform is:
       ct_backward = [yr1[0] - yr2[0]/ct_forward[1], 1.0/ct_forward[1] ]
 
 
-      ;; Get the colour of the points if it's not been defined.
-      IF ~ KEYWORD_SET( color ) THEN color = ax[iYRight].color
+      ;; Get the colour of the points if not defined by the user.
+      IF ~ KEYWORD_SET( color ) THEN color = axRight.color
    ENDIF ELSE BEGIN
+
       ;; Otherwise, we define our new right axis by the relative
       ;; ranges required for the old data (left axis) and the 
       ;; new data.
 
       ;; The ranges of the new and old axes.
-      yr1 = ax[ iYLeft ].YRANGE
+      yr1 = axLeft.YRANGE
       yr2 = KEYWORD_SET( yrange ) ? yrange : [MIN(yplot,MAX=maxY), maxY]
 
       ;; Coordinate transform from old to new and back again...
@@ -218,18 +220,12 @@ FUNCTION OVERPLOT_SECOND_AXIS, plot_object, x, y, y_error, $
       ct_backward= [yr1[0] - yr2[0] / ratio, 1.0/ratio]
 
       ;; Get the y-axis on the right, remove it, and replace it.
-      
-      ;; Remove old y-axis on the right and replace it.
-      ax[iYRight] ->  DELETE
+      ;; Change the coordinate transform for the right hand axis
+      ;; and then deal with colours / appearance / etc...
+      axRight.coord_transform = ct_forward
+      IF KEYWORD_SET( color ) THEN axRight.color = color
+      IF KEYWORD_SET( ytitle) THEN axRight.title = ytitle
 
-      ;; Create new one. The object is now done, so overwrite the ref.
-      ax[iYRight] = AXIS('Y',LOCATION='Right', COLOR=color, $
-                         TICKFONT_SIZE=plot_object.font_size, $
-                         TICKFONT_NAME=plot_object.font_name, $
-                         TICKFONT_STYLE=plot_object.font_style,$
-                         TARGET=plot_object, $
-                         COORD_TRANSFORM=ct_forward, $
-                         TITLE=ytitle )
 
    ENDELSE
 
@@ -241,7 +237,8 @@ FUNCTION OVERPLOT_SECOND_AXIS, plot_object, x, y, y_error, $
                xplot, ct_backward[0] + yplot*ct_backward[1]  )
 
    ENDIF ELSE BEGIN
-      
+      eplot = N_ELEMENTS( y_error) GE 1 ? y_error : 0
+
       ;; If we want error bars, these need to be scaled by the 
       ;; value of the coordinate transform as well (but not translated).
       p = ERRORPLOT(OVERPLOT=plot_object, /CURRENT, $
@@ -252,22 +249,12 @@ FUNCTION OVERPLOT_SECOND_AXIS, plot_object, x, y, y_error, $
    ENDELSE
 
    ;; The axis for some reason has is text hidden. Put it back!
-   ax[iYRight].SHOWTEXT = 1
+   axRight.SHOWTEXT = 1
 
    RETURN, p
 END
 
 
-
-
-
-
-;p1a = PLOT( [0,4,3], YTITLE='Test data 1',CURRENT=FG_CURRENT(p1a),NAME='black 1'  )
-;p2a = PLOT( [0,1.5,2], [1,1,2.5], /CURRENT, /OVERPLOT, COLOR='grey',NAME='black 2' )
-;p3a = OVERPLOT_SECOND_AXIS( p1a, [10,5,5],COLOR='Dodger blue',YTITLE='Test data 2', NAME='blue 1' )
-;p4a = OVERPLOT_SECOND_AXIS( p1a, [7,6,6], /DONT_REDRAW, COLOR='Blue', NAME='blue 2' )
-
-;l = LEGEND( TARGET=[p1a,p2a,p3a,p4a], POSITION=[0.98,0.98] )
 
 
 
