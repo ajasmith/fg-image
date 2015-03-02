@@ -1,3 +1,4 @@
+; docformat = 'rst'
 ;
 ; :NAME:
 ;   overplot_second_axis
@@ -42,6 +43,16 @@ FUNCTION OVERPLOT_SECOND_AXIS, plot_object, x, y, y_error, $
                                HELP=help, $
                                _EXTRA=extra
 ;+
+;    
+;    .. image:: overplot_second_axis.png
+;
+;    Overplot data with a different y-range by replacing the right y-axis.
+;
+;
+; :RETURNS:
+;
+;    An object reference to a plot.
+;
 ;
 ; :PARAMS:
 ;
@@ -54,6 +65,7 @@ FUNCTION OVERPLOT_SECOND_AXIS, plot_object, x, y, y_error, $
 ;
 ;    y_error: in, optional, type=numeric
 ;       Optional error bar on the y-data.
+;
 ;
 ; :KEYWORDS:
 ;
@@ -78,6 +90,38 @@ FUNCTION OVERPLOT_SECOND_AXIS, plot_object, x, y, y_error, $
 ;       Additional keyword options to pass to the `PLOT` command.
 ;       
 ;    
+; :EXAMPLES:
+;
+;     Create some exciting data with different ranges::
+;
+;       IDL> t  = FINDGEN( 1718 ) * !PI / 180.0
+;       IDL> y1 = SIN( t ) + COS( t * 2.1 )
+;       IDL> y2 = 6.3 - t * 0.1 * (1 - SIN( t*1.4 ))
+;       IDL> y3 = 6.4 + COS( t * 1.4 ) * 0.4
+;       
+;
+;     And then plot it::
+;
+;       IDL> p1 = PLOT( t, y1, YRANGE=[-2,2], COLOR='Dodger blue', $
+;                       YTITLE='Left axis range', $
+;                       DIMENSION=[700, 300], $
+;                       NAME='Left axis data' )
+;       IDL> p2 = OVERPLOT_SECOND_AXIS( p1, t, y2, COLOR='Tomato', THICK=2, $
+;                                       YTITLE='Right axis range', $
+;                                       YRANGE=[1,7], NAME='Right axis data' )
+;
+;
+;     Adding extra data to the new axis range can be carried out using the `DONT_REDRAW` keyword::
+;      
+;       IDL> p3 = OVERPLOT_SECOND_AXIS( p1, t, y3, /DONT_REDRAW, COLOR='Orange', $
+;                                       NAME='Right axis data with DONT_REDRAW keyword' )
+;
+;       IDL> l = LEGEND( TARGET=[p1,p2,p3], FONT_SIZE=10, $
+;                        HORIZONTAL_ALIGNMENT='Left', $
+;                        VERTICAL_ALIGNMENT='Bottom', $
+;                        POSITION=[1, -1.8], /DATA ) 
+;
+;
 ;
 ; :BUGS:
 ;    Cannot currently cope with logarithmic y-axes. An error will be
@@ -97,12 +141,18 @@ FUNCTION OVERPLOT_SECOND_AXIS, plot_object, x, y, y_error, $
 ;
 ;    26 Feb 2015 (AJAS) Created initial test version.
 ;
+;    02 Mar 2015 (AJAS) Bug with /DONT_REDRAW fixed. Documentation added.
+;
 ;-
 
 
    ;ON_ERROR, 2
    COMPILE_OPT IDL2
 
+   IF KEYWORD_SET( help ) THEN BEGIN
+      FG_HELP, 'overplot_second_axis'
+      RETURN, !NULL
+   ENDIF
 
    IF KEYWORD_SET( ylog ) THEN MESSAGE, $
       'Plotting on a log axis not currently supported.'
@@ -122,7 +172,7 @@ FUNCTION OVERPLOT_SECOND_AXIS, plot_object, x, y, y_error, $
    
    ;; Get the left and right y-axis
    aloc = []
-   FOREACH a, ax DO aloc = [ aloc, TOTAL((a.location GT 0)*[1,2,4],/INT) ]
+   FOREACH a, ax DO aloc = [ aloc, ISA(a,'Axis') ? TOTAL((a.location GT 0)*[1,2,4],/INT) : -1 ]
    iyLeft = ( WHERE( aloc EQ 2, nLeft ) )[0]
    iyRight= ( WHERE( aloc EQ 1, nRight) )[0]
    IF nLeft EQ 0 || nRight EQ 0 THEN MESSAGE, 'Valid y-axes not found.'
@@ -144,12 +194,12 @@ FUNCTION OVERPLOT_SECOND_AXIS, plot_object, x, y, y_error, $
       ;; The forward transform is taken from the right y-axis.
       ct_forward = ax[iYRight].coord_transform
 
+      ;; The second apparent y-range is then given by.
+      yr2 = ax[ iYRight].YRANGE * ct_forward[1] + ct_forward[0]
 
       ;; So the reverse transform is:
-      ct_backward = [yr1[0] - ct_forward[0]/ct_forward[1], 1.0/ct_forward[1] ]
+      ct_backward = [yr1[0] - yr2[0]/ct_forward[1], 1.0/ct_forward[1] ]
 
-      ;; The second apparent y-range is then given by.
-      yr2 = ax[ iYRight].YRANGE * ct_backward[1] + ct_backward[0]
 
       ;; Get the colour of the points if it's not been defined.
       IF ~ KEYWORD_SET( color ) THEN color = ax[iYRight].color
@@ -184,7 +234,6 @@ FUNCTION OVERPLOT_SECOND_AXIS, plot_object, x, y, y_error, $
    ENDELSE
 
    ;; Now do our plotting of our new data.
-
    IF ~ KEYWORD_SET( yerr_kw ) THEN BEGIN
 
       p = PLOT(OVERPLOT=plot_object, /CURRENT, $
@@ -213,14 +262,37 @@ END
 
 
 
-p1a = PLOT( [0,4,3], YTITLE='Test data 1',CURRENT=FG_CURRENT(p1a),NAME='black 1'  )
-p2a = PLOT( [0,1.5,2], [1,1,2.5], /CURRENT, /OVERPLOT, COLOR='grey',NAME='black 2' )
-p3a = OVERPLOT_SECOND_AXIS( p1a, [10,5,5],COLOR='Dodger blue',YTITLE='Test data 2', NAME='blue 1' )
-p4a = OVERPLOT_SECOND_AXIS( p1a, [7,6,6], /DONT_REDRAW, COLOR='Blue', NAME='blue 2' )
+;p1a = PLOT( [0,4,3], YTITLE='Test data 1',CURRENT=FG_CURRENT(p1a),NAME='black 1'  )
+;p2a = PLOT( [0,1.5,2], [1,1,2.5], /CURRENT, /OVERPLOT, COLOR='grey',NAME='black 2' )
+;p3a = OVERPLOT_SECOND_AXIS( p1a, [10,5,5],COLOR='Dodger blue',YTITLE='Test data 2', NAME='blue 1' )
+;p4a = OVERPLOT_SECOND_AXIS( p1a, [7,6,6], /DONT_REDRAW, COLOR='Blue', NAME='blue 2' )
 
-l = LEGEND( TARGET=[p1a,p2a,p3a,p4a], POSITION=[0.98,0.98] )
+;l = LEGEND( TARGET=[p1a,p2a,p3a,p4a], POSITION=[0.98,0.98] )
 
 
+
+t  = FINDGEN( 1718 ) * !PI / 180.0
+y1 = SIN( t ) + COS( t * 2.1 )
+y2 = 6.3 - t * 0.1 * (1 - SIN( t*1.4 ))
+y3 = 6.4 + COS( t * 1.4 ) * 0.4
+
+
+p1 = PLOT( t, y1, YRANGE=[-2,2], COLOR='Dodger blue', $
+           YTITLE='Left axis range', $
+           DIMENSION=[700, 300], $
+           NAME='Left axis data', CURRENT=FG_CURRENT(p1) )
+
+p2 = OVERPLOT_SECOND_AXIS( p1, t, y2, COLOR='Tomato', THICK=2, $
+                           YTITLE='Right axis range', $
+                           YRANGE=[1,7], NAME='Right axis data' )
+
+p3 = OVERPLOT_SECOND_AXIS( p1, t, y3, /DONT_REDRAW, COLOR='Orange', $
+                           NAME='Right axis data with DONT_REDRAW keyword' )
+
+l = LEGEND( TARGET=[p1,p2,p3], FONT_SIZE=10, $
+            HORIZONTAL_ALIGNMENT='Left', $
+            VERTICAL_ALIGNMENT='Bottom', $
+            POSITION=[1, -1.8], /DATA ) 
 
 
 END
