@@ -44,7 +44,7 @@ FUNCTION OVERPLOT_SECOND_AXIS, plot_object, x, y, y_error, $
                                _EXTRA=extra
 ;+
 ;    
-;    .. image:: overplot_second_axis.png
+;    .. image:: example_images/overplot_second_axis.png
 ;
 ;    Overplot data with a different y-range by replacing the right y-axis.
 ;

@@ -208,7 +208,7 @@
                      _EXTRA=extra
 ;+
 ;
-;     .. image:: mappoints.png
+;     .. image:: example_images/mappoints.png
 ;
 ;
 ;

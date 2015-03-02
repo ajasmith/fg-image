@@ -84,7 +84,7 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
 ;+
 ;
 ;
-;    .. image:: image_plot_f.png
+;    .. image:: example_images/image_plot_f.png
 ;
 ;    Recreates the functionality of `IMAGE_PLOT` using function
 ;    graphics (using the IDL function `IMAGE` instead of Coyote's
@@ -219,7 +219,7 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
 ;
 ;      
 ;
-;       .. image:: image_plot_f_map_example.png
+;       .. image:: example_images/image_plot_f_map_example.png
 ;
 ;       For further details of map projections, consult the IDL
 ;         help documention for `MAP`. Alterations to the map,
@@ -328,7 +328,7 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
 ;      ip = IMAGE_PLOT_F( /TEST )
 ;
 ;
-;    .. image:: image_plot_f_test.png
+;    .. image:: example_images/image_plot_f_test.png
 ;
 ;
 ; :USES:

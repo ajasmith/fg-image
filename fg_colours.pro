@@ -56,7 +56,7 @@ FUNCTION FG_COLOURS, width, HELP=help
 ;   Create a list of all colours:: 
 ;       IDL> f = FG_COLOURS()
 ;
-; .. image:: fg_colours.png
+; .. image:: example_images/fg_colours.png
 ;  
 ; :AUTHOR:
 ;    Andy Smith  (smith [at] atm.ox.ac.uk / aja.smith [at] gmail.com)

@@ -30,7 +30,7 @@
 FUNCTION HATCH_THIS_FG, nx, ny, q, image_object, HELP=help
 ;+
 ;
-;  .. image:: hatch_this_fg.png
+;  .. image:: example_images/hatch_this_fg.png
 ;
 ;
 ;  Given a regular [nx, ny] 2D array, hatch the areas indexed by 
