@@ -437,7 +437,11 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
        lat=(FINDGEN(512)+0.5)*0.351562-90 & lon=(FINDGEN(1024)+0.5)*0.351562-180
 
        fin = FINDGEN( 1024, 512 ) - 200000.0
-       qhatch = WHERE( fin GT 1E5 AND fin LT 2E5  )
+
+       glon = lon #  REPLICATE(1,512)
+       glat = lat ## REPLICATE(1,1024)
+       qhatch = WHERE( glon GT -50 AND glon LT 20 AND glat GT 20 AND glat LT 40 )
+
 
        ex1 = IMAGE_PLOT_F(day,lon,lat,MAP_PROJECTION='Orthographic',$
                           CENTER_LAT=60,CENTER_LON=30,LAYOUT=[2,2,1],$
