@@ -113,6 +113,8 @@
        wid = id.WINDOW
        ;; Clear it.
        wid.ERASE
+       ;; Refresh it
+       wid.REFRESH
        ;; Then make sure it's the currently selected window.
        wid.SELECT
        current = 1b

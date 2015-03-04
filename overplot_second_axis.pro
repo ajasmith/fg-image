@@ -148,7 +148,7 @@ FUNCTION OVERPLOT_SECOND_AXIS, plot_object, x, y, y_error, $
 ;-
 
 
-   ;ON_ERROR, 2
+   ON_ERROR, 2
    COMPILE_OPT IDL2
 
    IF KEYWORD_SET( help ) THEN BEGIN
@@ -166,13 +166,12 @@ FUNCTION OVERPLOT_SECOND_AXIS, plot_object, x, y, y_error, $
    CATCH, axisError
    IF axisError THEN BEGIN
       CATCH, /CANCEL
-      MESSAGE, 'The objref passed does not have valid AXIS objects.'
+      MESSAGE, 'The objref passed does not have valid AXIS object.'
       RETURN, !NULL
    ENDIF
    ;; The idl documentation 'Axis References in IDL' reliably informs me that
    ;; you can use the  plot object as a hash and get back axis1 (always the left
    ;; y-axis for 2D plot) and axis3 (always right y-axis for a 2D plot).
-   axLeft = plot_object[ 'axis1' ]
    axRight= plot_object[ 'axis3' ]
    ;; If we've got this far, stop worrying about axes.
    CATCH, /CANCEL
@@ -190,13 +189,16 @@ FUNCTION OVERPLOT_SECOND_AXIS, plot_object, x, y, y_error, $
       ;; our information from the axes already present.
       ;; We assume that the right axis is what we are using
       ;; for our new scale.
-      yr1 = axLeft.YRANGE
+
+      ;; The actual plotting y-range used.
+      yr1 = axRight.YRANGE
       
       ;; The forward transform is taken from the right y-axis.
       ct_forward = axRight.coord_transform
 
-      ;; The second apparent y-range is then given by.
-      yr2 = axRight.YRANGE * ct_forward[1] + ct_forward[0]
+      ;; The apparent y-range is then given by the coordinate 
+      ;; transform  on the actual range.
+      yr2 = yr1 * ct_forward[1] + ct_forward[0]
 
       ;; So the reverse transform is:
       ct_backward = [yr1[0] - yr2[0]/ct_forward[1], 1.0/ct_forward[1] ]
@@ -211,7 +213,7 @@ FUNCTION OVERPLOT_SECOND_AXIS, plot_object, x, y, y_error, $
       ;; new data.
 
       ;; The ranges of the new and old axes.
-      yr1 = axLeft.YRANGE
+      yr1 = axRight.YRANGE
       yr2 = KEYWORD_SET( yrange ) ? yrange : [MIN(yplot,MAX=maxY), maxY]
 
       ;; Coordinate transform from old to new and back again...
@@ -253,6 +255,15 @@ FUNCTION OVERPLOT_SECOND_AXIS, plot_object, x, y, y_error, $
 
    RETURN, p
 END
+
+
+
+
+
+
+
+
+
 
 
 
