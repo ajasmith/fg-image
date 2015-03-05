@@ -1,10 +1,5 @@
 ; docformat = 'rst'
 ;
-; :NAME:
-;   ip_roi_draw
-;
-;
-;
 ;
 ; :COPYRIGHT:
 ;
@@ -30,13 +25,28 @@
 ;   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;   SOFTWARE.
 ;
+;+
 ;
+;   An interactive method to generate regions of interest (ROI).
+;
+; :PROPERTIES:
+;
+;    x
+;     The x locations of the ROI polygon.
+;    y
+;     The y locations of the ROI polygon.
+;    roi
+;     An `IDLanROI` object containing the polygon locations.
+;    polygon
+;     An array containing the vertices of the ROI polygon.
+;
+; 
+;-
 
-
-PRO iprd_obj::setProperty, x=x, y=y
+PRO iprd_roi::setProperty, x=x, y=y
 ;+
 ; Set the properties of the ROI. Once this is done, no changes.
-; X and Y must be set simultanaeously.
+; X and Y must be set simultanaeously. This code should not accessed by the user.
 ;
 ; :HIDDEN:
 ;-
@@ -54,12 +64,20 @@ PRO iprd_obj::setProperty, x=x, y=y
   ENDIF ELSE MESSAGE, 'You must set X and Y simultaneously. They must have identical dimensions.'
 END
 
-PRO iprd_obj::getProperty, x=x, y=y, polygon=poly, roi=roi
+PRO iprd_roi::getProperty, x=x, y=y, polygon=poly, roi=roi
 ;+
-; We can only get polygon once the ROI has been defined.
+; 
+; Get the region of interest that has been defined by `ip_roi_draw`. This is
+; necessary, because after the graphics window we use to draw our ROI has been
+; defined, control is returned to the main routine. As a result, at the time 
+; the function returns, we don't yet have the ROI defined.
 ;
-; :HIDDEN:
+; 
+; 
 ;-
+  ON_ERROR, 2
+  COMPILE_OPT idl2, hidden
+
   IF self.done THEN BEGIN
      IF ARG_PRESENT( x ) THEN x= *self.x
      IF ARG_PRESENT( y ) THEN y= *self.y
@@ -68,26 +86,50 @@ PRO iprd_obj::getProperty, x=x, y=y, polygon=poly, roi=roi
   ENDIF ELSE MESSAGE,/INFO, 'The ROI has not been set yet!'
 END
 
-PRO iprd_obj::cleanup
+
+FUNCTION iprd_roi::_overloadHelp, varname
+;+
+; Overload help so that we know whether our object is ready for use.
+;
+; :HIDDEN:
+;-
+  ON_ERROR, 2
+  COMPILE_OPT idl2, hidden
+
+  s0 = 'OBJREF    = <IPRD_ROI: '
+  s1 = self.done ? 'done> '+STRTRIM(N_ELEMENTS(*self.x),2)+' vertices' : 'waiting>'
+
+  finalString = STRLEN( varname ) GE 15 ? $
+               [varname,STRING(s0+s1,FORMAT='(16X,A)')]  : $
+               STRING(varname,s0+s1,FORMAT='(A-15,1X,A)')
+
+  RETURN, finalString
+END
+
+
+
+PRO iprd_roi::cleanup
 ;+
 ; :HIDDEN:
 ;-
+  ON_ERROR, 2
   COMPILE_OPT idl2, hidden
   PTR_FREE, self.x, self.y
 END
 
-FUNCTION iprd_obj::init
+FUNCTION iprd_roi::init
 ;+
 ; No need to do anything. Our object just sits about waiting for
 ; data from the main code.
 ;
 ; :HIDDEN:
 ;-
+  ON_ERROR, 2
   COMPILE_OPT idl2, hidden
   RETURN, 1
 END
 
-PRO iprd_obj__define
+PRO iprd_roi__define
 ;+
 ;  
 ;    Very simple object to pass back a roi once we have it.
@@ -95,9 +137,13 @@ PRO iprd_obj__define
 ;
 ; :HIDDEN:
 ;-
+  ON_ERROR, 2
   COMPILE_OPT idl2, hidden
-  define = { iprd_obj, inherits IDL_OBJECT, x: PTR_NEW(), y: PTR_NEW(), done: 0B }
+  define = { iprd_roi, inherits IDL_OBJECT, x: PTR_NEW(), y: PTR_NEW(), done: 0B }
 END
+
+
+
 
 
 
@@ -109,18 +155,40 @@ END
 
 FUNCTION iprdMouseDown, oWin, x, y, iButton, KeyMods, nClicks
 ;+
-; Mouse down code to pass to the image window.
+; Mouse down code to pass to the image window. This is where the
+; bulk of the thinking is done. For all clicks, we check that the
+; click is over the image portion of the window.
+; 
+; Left click - Get the position of the click in image data coords.
+;              Add it to the polygon vertices list.
+;              Update the overplotted polyline.
+;              
+; Middle click - Remove the most recent vertice from the polygon.
+;                Update the overplotted polyline.
+;
+; Right click - Close the polygon by making a final vertice that
+;               is the same as the 1st vertice.
 ;
 ; :HIDDEN:
 ;
 ;-
+  ON_ERROR, 2
+  COMPILE_OPT idl2, hidden
 
   state = oWin.UVALUE
-  state.buttonDown = 1B
 
   ;; Check that the mouse is on top of the image.
-  im = oWin.hitTest(x,y)
+  hit = oWin.hitTest(x,y)
 
+  ;; Select the image object.
+  yep = BYTARR(N_ELEMENTS(hit))
+  FOREACH h, hit,i DO yep[i] = ISA( h, 'IMAGE' )
+  qImage = (WHERE( yep ))[0]
+  IF qImage GE 0 THEN im = hit[qImage] ELSE RETURN, 0
+
+
+
+  
   ;; Only add the point if it lies within the image.
   IF ISA( im, 'IMAGE' ) THEN BEGIN
 
@@ -131,7 +199,13 @@ FUNCTION iprdMouseDown, oWin, x, y, iButton, KeyMods, nClicks
         ;; Check that we're not at the maximum.
         IF state.n GT N_ELEMENTS(state.x)-2 THEN MESSAGE, 'Too many points for the region.'
 
+        ;; And get the location in the image.
         v = im.getValueAtLocation(x,y,/INTERPOLATE,/DEVICE)
+        
+        ;; If there's a map-projection, we need to move from proj metres to lat/lon.
+        mp = im.MAPPROJECTION
+        IF ISA(mp, 'MAPPROJECTION') THEN v = mp -> mapInverse( v[0:1] )
+
         state.x[ state.n ] = v[0]
         state.y[ state.n ] = v[1]
 
@@ -142,7 +216,6 @@ FUNCTION iprdMouseDown, oWin, x, y, iButton, KeyMods, nClicks
         ;; data points.
         IF state.n EQ 1 THEN BEGIN
            state.line.hide = 0
-           state.newline.hide = 0
            state.line -> setData, state.x[[0,0]], state.y[[0,0]]
         ENDIF ELSE BEGIN
            state.line -> setData, state.x[0:state.n-1], state.y[0:state.n-1]
@@ -160,23 +233,31 @@ FUNCTION iprdMouseDown, oWin, x, y, iButton, KeyMods, nClicks
 
      ENDIF ELSE IF iButton EQ 4 THEN BEGIN
         
-        ;; Loop back to the start
-        state.n ++
-        state.x[ state.n-1 ] = state.x[ 0 ]
-        state.y[ state.n-1 ] = state.y[ 0 ]
+        IF state.n LT 3 THEN BEGIN
+           ;; Warn by leaving message across the screen for a second.
+           oText = TEXT( /NORMAL, 0.5, 0.5, 'Minimum 3 points required!', $
+                         ALIGN=0.5, VERTICAL_ALIGN=0.5, COLOR='RED',$
+                         FILL_BACKGROUND=1, FILL_COLOR='White', FONT_SIZE=30 )
+           WAIT, 1
+           oText -> DELETE
+        ENDIF ELSE BEGIN
+           ;; Loop back to the start
+           state.n ++
+           state.x[ state.n-1 ] = state.x[ 0 ]
+           state.y[ state.n-1 ] = state.y[ 0 ]
 
-        state.line -> setData, state.x[0:state.n-1], state.y[0:state.n-1]
+           state.line -> setData, state.x[0:state.n-1], state.y[0:state.n-1]
 
-        ;; Now that we've defined our polygon, save it to the object.
-        state.object -> setProperty, X=state.x[0:state.n-1], Y=state.y[0:state.n-1]
+           ;; Now that we've defined our polygon, save it to the object.
+           state.object -> setProperty, X=state.x[0:state.n-1], Y=state.y[0:state.n-1]
 
-        ;; Kill the graphics window
-        oWin -> CLOSE
+           ;; Kill the graphics window
+           oWin -> CLOSE
 
-        ;; And message our success.
-        HELP, state.object, OUTPUT=output
-        PRINT, 'ROI is ready as '+output
-        RETURN, 0
+           ;; And message our success.
+           PRINT, 'ROI variable is ready to use.'
+           RETURN, 0
+        ENDELSE
      ENDIF
 
   ENDIF
@@ -188,55 +269,13 @@ FUNCTION iprdMouseDown, oWin, x, y, iButton, KeyMods, nClicks
 
 END
 
-FUNCTION iprdMouseMotion, oWin, x, y, KeyMods
-;+
-; Code for mouse motion. This is supposed to show where the next
-; line goes, but since it seems to override the click handler, it's 
-; not really helping at all. It all goes wrong when the POLYLINE
-; is updated. Up until then, it's ok.
-;
-; :HIDDEN:
-;-
-  state = oWin.uvalue
-  IF state.buttonDown THEN RETURN, 0
-  ;; Check that the mouse is on top of the image.
-  im = oWin.hitTest(x,y)
-
-  ;; Only add the point if it lies within the image and we're not finished.
-  IF ISA( im, 'IMAGE' ) && state.n GT 0 THEN BEGIN
-     state.newline.hide = 0
-     state.newline.GetData, prevX, prevY
-     v = im.getValueAtLocation(x,y,/INTERPOLATE,/DEVICE)
-     ;HELP, prevX[-1], v[0], prevY[-1], v[1]
-     IF prevX[-1] NE v[0] && prevY[-1] NE v[1] THEN BEGIN
-        lx = [ state.x[ state.n-1 ], v[0] ]
-        ly = [ state.y[ state.n-1 ], v[1] ]
-        ;state.newline.SetData, lx, ly
-     ENDIF
-  ENDIF
-
-
-  RETURN, 0 ;; Skip default event handling
-
-END
-
-FUNCTION iprdMouseUp, oWin, x, y, iButton
-;+
-; Reset the buttonDown value.
-;
-; :HIDDEN:
-;-
-  state = oWin.uvalue
-  state.buttonDown = 0B
-  oWin.uvalue = state
-  RETURN, 0
-END
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;; MAIN ROUTINE ;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
- FUNCTION ip_roi_draw, image_object, HELP=help
+ FUNCTION ip_roi_draw, image_object, CONTINENTS=continents, MAP=onMap, $
+                       HELP=help
 ;+
 ;
 ;  Open a dialogue window to select a region of interest for an image
@@ -244,13 +283,27 @@ END
 ;  object that becomes populated with a polygon once we have finished
 ;  defining the ROI.
 ;
-;  :PARAMS:
-;     image_object: in, required, type="IMAGE object reference"
 ;
-;  :KEYWORDS:
+; :Categories:
+;    Function graphics, image_plot
+
+;  :Returns:
+;     An `iprd_roi` object that will contain the ROI polygons once
+;      they have been defined.
+;
+;  :Params:
+;     image_object: in, required, type="IMAGE object reference"
+;      An image to define an ROI on.
+;
+;  :Keywords:
+;     MAP: in, optional, type=boolean
+;      Use the image's map projection (if it exists) to warp the image
+;       we are defining the ROI in.
+;     CONTINENTS: in, optional, type=boolean
+;      If the `MAP` keyword is set, also put continents over the top.
 ;     HELP: in, optional, hidden, type=boolean
 ;
-;  :EXAMPLES:
+;  :Examples:
 ;
 ;     Generate an image, and then define a region of interest::
 ;
@@ -278,44 +331,56 @@ END
 ;
 ;
 ;-
+  ON_ERROR, 2
+  COMPILE_OPT idl2, hidden
 
   IF KEYWORD_SET( help ) THEN FG_HELP, 'ip_roi_draw'
 
   ;; Get the data from our image, having checked that it is an image.
   IF ~ ISA( image_object, 'IMAGE' ) THEN MESSAGE, 'You must provide a valid IMAGE!'
-
   image_object -> getData, iZ, iX, iY
 
+  ;; Fill as much of the window as is possible.
+  position = [0,0.05,1,1]
+
   ;; And then create our own new space to plot it in.
-  theImage = IMAGE( iZ, iX, iY, AXIS_STYLE=0, POSITION=[0,0.05,1,1] )
-  theDescription = TEXT( 0.5,0.025, 'Left button to mark point; middle to erase previous point; right button to close', ALIGN=0.5,VERTICAL_ALIGN=0.5 )
+  IF KEYWORD_SET( onMap ) THEN BEGIN
+     mp = image_object.MapProjection
+     IF ~KEYWORD_SET( mp ) THEN MESSAGE, 'No map projection available!'
+     oImage = IMAGE( iZ, iX, iY, AXIS_STYLE=0, POSITION=position, $
+                     MAP_PROJECTION=mp.map_projection, GRID_UNITS=2, $
+                     CENTER_LATITUDE=mp.center_latitude, $
+                     CENTER_LONGITUDE=mp.center_longitude )
+     IF KEYWORD_SET( continents ) THEN continents=MAPCONTINENTS()
+     oImage.mapgrid.hide = 1
+  ENDIF ELSE $
+     oImage = IMAGE( iZ, iX, iY, AXIS_STYLE=0, POSITION=position )
+
+
+  oDescription = TEXT( 0.5,0.025, 'Left button to mark point; middle to erase previous point; right button to close', ALIGN=0.5,VERTICAL_ALIGN=0.5 )
 
 
   ;; The outputted roi is passed as an object that will be populated
   ;; at the end of the window's lifetime.
-  output = OBJ_NEW( 'IPRD_OBJ' )
+  output = OBJ_NEW( 'IPRD_ROI' )
 
 
-  ;; Our polygon will have a maximum of 200 points. We will pass 
-  ;; the roi polygon around with is.
-  nmax = 200
+  ;; Our polygon will have a maximum of 1000 points. We will pass 
+  ;; the roi polygon around with us.
+  nmax = 1000
 
   ;; Our line will show the current shape.
   theLine = POLYLINE( [0,0], [0,0], /HIDE, /DATA, $
-                      THICK=3, COLOR='Red', TARGET=theImage )
-  newLine = POLYLINE( [0,0], [0,0], /HIDE, /DATA, $
-                      THICK=2, COLOR='Orange', TARGET=theImage)
+                      THICK=3, COLOR='Red', TARGET=oImage )
 
-  theImage.window.UVALUE={x:FLTARR(nmax), y:FLTARR(nmax), n:0L, $
-                          buttonDown:0B, previousPosition:[0.0,0.0], $
-                          line:theLine, newLine:newLine, object:output}
+  oImage.window.UVALUE={x:FLTARR(nmax), y:FLTARR(nmax), n:0L, $
+                        line:theLine, object:output}
 
-  theImage.window.MOUSE_DOWN_HANDLER='iprdMouseDown'
-  ;; Currently can't make motion and up handlers work,
-  ;; so simplify by not using.
-;  theImage.window.MOUSE_MOTION_HANDLER='iprdMouseMotion'
-;  theImage.window.MOUSE_UP_HANDLER='iprdMouseUp'
-  theImage -> SELECT
+  ;; Define a mouse handler for clicks.
+  oImage.window.MOUSE_DOWN_HANDLER='iprdMouseDown'
+
+  ;; Select the image so that we can zoom in and out by scrolling.
+  oImage -> SELECT
 
   RETURN, output
 
@@ -362,7 +427,7 @@ mp1 = MAPPOINTS(  aod, lat, lon, RANGE=[-0.5,2], $
 
 
 ;; Get the region of interest
-ir = ip_roi_draw( mp1 )
+ir = ip_roi_draw( mp1, /MAP, /CONTINENT )
 
 
 ;; Now we stop until we have defined the ROI.
