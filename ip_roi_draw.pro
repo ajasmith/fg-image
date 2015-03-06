@@ -156,7 +156,7 @@ END
 FUNCTION iprdMouseDown, oWin, x, y, iButton, KeyMods, nClicks
 ;+
 ; Mouse down code to pass to the image window. This is where the
-; bulk of the thinking is done. For all clicks, we check that the
+; bulk of the thinking is done. For left clicks, we check that the
 ; click is over the image portion of the window.
 ; 
 ; Left click - Get the position of the click in image data coords.
@@ -177,91 +177,87 @@ FUNCTION iprdMouseDown, oWin, x, y, iButton, KeyMods, nClicks
 
   state = oWin.UVALUE
 
-  ;; Check that the mouse is on top of the image.
-  hit = oWin.hitTest(x,y)
 
-  ;; Select the image object.
-  yep = BYTARR(N_ELEMENTS(hit))
-  FOREACH h, hit,i DO yep[i] = ISA( h, 'IMAGE' )
-  qImage = (WHERE( yep ))[0]
-  IF qImage GE 0 THEN im = hit[qImage] ELSE RETURN, 0
+  ;; Left click = add tick
+  IF iButton EQ 1 THEN BEGIN
+
+     ;; Check that the mouse is on top of the image.
+     hit = oWin.hitTest(x,y)
+
+     ;; Select the image object.
+     yep = BYTARR(N_ELEMENTS(hit))
+     FOREACH h, hit,i DO yep[i] = ISA( h, 'IMAGE' )
+     qImage = (WHERE( yep ))[0]
+     ;; If we don't have an image object to play with then return.
+     IF qImage GE 0 THEN im = hit[qImage] ELSE RETURN, 0
 
 
 
-  
-  ;; Only add the point if it lies within the image.
-  IF ISA( im, 'IMAGE' ) THEN BEGIN
+     ;; Check that we're not at the maximum.
+     IF state.n GT N_ELEMENTS(state.x)-2 THEN MESSAGE, 'Too many points for the region.'
 
-
-     ;; Left click = add tick
-     IF iButton EQ 1 THEN BEGIN
-
-        ;; Check that we're not at the maximum.
-        IF state.n GT N_ELEMENTS(state.x)-2 THEN MESSAGE, 'Too many points for the region.'
-
-        ;; And get the location in the image.
-        v = im.getValueAtLocation(x,y,/INTERPOLATE,/DEVICE)
+     ;; And get the location in the image.
+     v = im.getValueAtLocation(x,y,/INTERPOLATE,/DEVICE)
         
-        ;; If there's a map-projection, we need to move from proj metres to lat/lon.
-        mp = im.MAPPROJECTION
-        IF ISA(mp, 'MAPPROJECTION') THEN v = mp -> mapInverse( v[0:1] )
+     ;; If there's a map-projection, we need to move from proj metres to lat/lon.
+     mp = im.MAPPROJECTION
+     IF ISA(mp, 'MAPPROJECTION') THEN v = mp -> mapInverse( v[0:1] )
 
-        state.x[ state.n ] = v[0]
-        state.y[ state.n ] = v[1]
+     state.x[ state.n ] = v[0]
+     state.y[ state.n ] = v[1]
 
-        ;; Increment the counter.
+     ;; Increment the counter.
+     state.n ++
+
+     ;; If we're at the 1st point, stop hiding and define two
+     ;; data points.
+     IF state.n EQ 1 THEN BEGIN
+        state.line.hide = 0
+        state.line -> setData, state.x[[0,0]], state.y[[0,0]]
+     ENDIF ELSE BEGIN
+        state.line -> setData, state.x[0:state.n-1], state.y[0:state.n-1]
+     ENDELSE
+
+     ;; Middle button = remove last tick
+  ENDIF ELSE IF iButton EQ 2 THEN BEGIN
+     state.n --
+     CASE state.n OF 
+        -1:   state.n = 0
+        0:    state.line.hide = 1
+        1:    state.line -> setData, state.x[ [0,0] ],   state.y[ [0,0] ]
+        ELSE: state.line -> setData, state.x[0:state.n-1], state.y[0:state.n-1]
+     ENDCASE
+
+  ENDIF ELSE IF iButton EQ 4 THEN BEGIN
+     
+     IF state.n LT 3 THEN BEGIN
+        ;; Warn by leaving message across the screen for a second.
+        oText = TEXT( /NORMAL, 0.5, 0.5, 'Minimum 3 points required!', $
+                      ALIGN=0.5, VERTICAL_ALIGN=0.5, COLOR='RED',$
+                      FILL_BACKGROUND=1, FILL_COLOR='White', FONT_SIZE=30 )
+        WAIT, 1
+        oText -> DELETE
+     ENDIF ELSE BEGIN
+        ;; Loop back to the start
         state.n ++
-
-        ;; If we're at the 1st point, stop hiding and define two
-        ;; data points.
-        IF state.n EQ 1 THEN BEGIN
-           state.line.hide = 0
-           state.line -> setData, state.x[[0,0]], state.y[[0,0]]
-        ENDIF ELSE BEGIN
-           state.line -> setData, state.x[0:state.n-1], state.y[0:state.n-1]
-        ENDELSE
-
-        ;; Middle button = remove last tick
-     ENDIF ELSE IF iButton EQ 2 THEN BEGIN
-        state.n --
-        CASE state.n OF 
-          -1:    state.n = 0
-           0:    state.line.hide = 1
-           1:    state.line -> setData, state.x[ [0,0] ],   state.y[ [0,0] ]
-           ELSE: state.line -> setData, state.x[0:state.n-1], state.y[0:state.n-1]
-        ENDCASE
-
-     ENDIF ELSE IF iButton EQ 4 THEN BEGIN
+        state.x[ state.n-1 ] = state.x[ 0 ]
+        state.y[ state.n-1 ] = state.y[ 0 ]
         
-        IF state.n LT 3 THEN BEGIN
-           ;; Warn by leaving message across the screen for a second.
-           oText = TEXT( /NORMAL, 0.5, 0.5, 'Minimum 3 points required!', $
-                         ALIGN=0.5, VERTICAL_ALIGN=0.5, COLOR='RED',$
-                         FILL_BACKGROUND=1, FILL_COLOR='White', FONT_SIZE=30 )
-           WAIT, 1
-           oText -> DELETE
-        ENDIF ELSE BEGIN
-           ;; Loop back to the start
-           state.n ++
-           state.x[ state.n-1 ] = state.x[ 0 ]
-           state.y[ state.n-1 ] = state.y[ 0 ]
+        state.line -> setData, state.x[0:state.n-1], state.y[0:state.n-1]
+        
+        ;; Now that we've defined our polygon, save it to the object.
+        state.object -> setProperty, X=state.x[0:state.n-1], Y=state.y[0:state.n-1]
 
-           state.line -> setData, state.x[0:state.n-1], state.y[0:state.n-1]
-
-           ;; Now that we've defined our polygon, save it to the object.
-           state.object -> setProperty, X=state.x[0:state.n-1], Y=state.y[0:state.n-1]
-
-           ;; Kill the graphics window
-           oWin -> CLOSE
-
-           ;; And message our success.
-           PRINT, 'ROI variable is ready to use.'
-           RETURN, 0
-        ENDELSE
-     ENDIF
-
+        ;; Kill the graphics window
+        oWin -> CLOSE
+        
+        ;; And message our success.
+        PRINT, 'ROI variable is ready to use.'
+        RETURN, 0
+     ENDELSE
   ENDIF
 
+  ;; Save the new state.
   oWin.UVALUE = state
 
   RETURN, 0 ;; Skip default event handling
@@ -325,9 +321,10 @@ END
 ;
 ;   
 ; :HISTORY:
+;
 ;   04 MAR 2015 (AJAS) Created.
 ;
-;
+;   05 MAR 2015 (AJAS) Added support for map projections.
 ;
 ;
 ;-
