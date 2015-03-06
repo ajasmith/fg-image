@@ -96,8 +96,9 @@ FUNCTION iprd_roi::_overloadHelp, varname
   ON_ERROR, 2
   COMPILE_OPT idl2, hidden
 
-  s0 = 'OBJREF    = <IPRD_ROI: '
-  s1 = self.done ? 'done> '+STRTRIM(N_ELEMENTS(*self.x),2)+' vertices' : 'waiting>'
+  id = STRTRIM(OBJ_VALID(self,/GET_HEAP_IDENTIFIER),2)
+  s0 = 'OBJREF    = <ObjHeapVar'+id+'(IPRD_ROI): '
+  s1 = self.done ? 'ready> '+STRTRIM(N_ELEMENTS(*self.x),2)+' vertices' : 'waiting>'
 
   finalString = STRLEN( varname ) GE 15 ? $
                [varname,STRING(s0+s1,FORMAT='(16X,A)')]  : $
@@ -228,6 +229,7 @@ FUNCTION iprdMouseDown, oWin, x, y, iButton, KeyMods, nClicks
         ELSE: state.line -> setData, state.x[0:state.n-1], state.y[0:state.n-1]
      ENDCASE
 
+     ;; Right button = finish by adding new tick = first tick.
   ENDIF ELSE IF iButton EQ 4 THEN BEGIN
      
      IF state.n LT 3 THEN BEGIN
@@ -235,7 +237,7 @@ FUNCTION iprdMouseDown, oWin, x, y, iButton, KeyMods, nClicks
         oText = TEXT( /NORMAL, 0.5, 0.5, 'Minimum 3 points required!', $
                       ALIGN=0.5, VERTICAL_ALIGN=0.5, COLOR='RED',$
                       FILL_BACKGROUND=1, FILL_COLOR='White', FONT_SIZE=30 )
-        WAIT, 1
+        WAIT, 0.8
         oText -> DELETE
      ENDIF ELSE BEGIN
         ;; Loop back to the start
@@ -329,7 +331,7 @@ END
 ;
 ;-
   ON_ERROR, 2
-  COMPILE_OPT idl2, hidden
+  COMPILE_OPT idl2
 
   IF KEYWORD_SET( help ) THEN FG_HELP, 'ip_roi_draw'
 
@@ -338,7 +340,7 @@ END
   image_object -> getData, iZ, iX, iY
 
   ;; Fill as much of the window as is possible.
-  position = [0,0.05,1,1]
+  position = [0,0.04,1,1]
 
   ;; And then create our own new space to plot it in.
   IF KEYWORD_SET( onMap ) THEN BEGIN
@@ -353,8 +355,9 @@ END
   ENDIF ELSE $
      oImage = IMAGE( iZ, iX, iY, AXIS_STYLE=0, POSITION=position )
 
-
-  oDescription = TEXT( 0.5,0.025, 'Left button to mark point; middle to erase previous point; right button to close', ALIGN=0.5,VERTICAL_ALIGN=0.5 )
+  ;; Leave a helpful message!
+  oDescription = TEXT( 0.5,0.02, FONT_SIZE=8, ALIGN=0.5,VERTICAL_ALIGN=0.5, $
+        'Left button to mark point; middle to erase previous point; right button to close; scroll-wheel to zoom'  )
 
 
   ;; The outputted roi is passed as an object that will be populated
@@ -370,6 +373,7 @@ END
   theLine = POLYLINE( [0,0], [0,0], /HIDE, /DATA, $
                       THICK=3, COLOR='Red', TARGET=oImage )
 
+  ;; Use the user value to pass the polyline and the vertices back and forth.
   oImage.window.UVALUE={x:FLTARR(nmax), y:FLTARR(nmax), n:0L, $
                         line:theLine, object:output}
 
