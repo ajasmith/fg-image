@@ -317,6 +317,8 @@ END
 ;
 ;        IDL> p = POLYGON( roi.polygon, /DATA, TARGET=ipf, COLOR='Red', THICK=3, FILL_TRANSPARENCY=70 )
 ;
+;     .. image:: example_images/ip_roi_ny.png
+;
 ;
 ; :AUTHOR:
 ;    Andy Smith  (smith [at] atm.ox.ac.uk / aja.smith [at] gmail.com)
