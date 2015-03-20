@@ -35,12 +35,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 PRO AXIS_WAVENUMBER, plot_object, XAXIS=xaxis_dummy, YAXIS=yaxis, $
                      WL_TICKS=wlt, NANOMETRES=nm, VERBOSE=verb,$
-                     MAX_TICKS=max_ticks, $
+                     MAX_TICKS=max_ticks, UNIT_FINAL_ONLY=ufo, $
                      NO_UNITS=no_units, HELP=help
 ;+
 ;
 ; Converts the second x- or y- axis to wavelengths, assuming that
 ; the main x- or y- axis is in wavenumber units.
+;
+;    .. image:: example_images/axis_wavenumber.png
 ;
 ; :PARAMS:
 ;    plot_object: in, required, type=objref
@@ -65,10 +67,22 @@ PRO AXIS_WAVENUMBER, plot_object, XAXIS=xaxis_dummy, YAXIS=yaxis, $
 ;    MAX_TICKS: in, optional, type=integer
 ;      The maximum number of ticks permitted.
 ;
+;    UNIT_FINAL_ONLY: in, optional, type=boolean, default=false
+;      Only print the unit on the final tick mark.
+; 
 ;    NO_UNITS: in, optional, type=boolean, default=false
 ;      Hide the units from the wavelength axis.
 ;
 ;    HELP: in, optional, type=boolean, default=false, hidden
+;
+;
+; :EXAMPLES:
+;
+;   Assuming we have a spectra, defined by `wn` and `bt`::
+;
+;      IDL> p = PLOT( wn, bt )
+;
+;      IDL> AXIS_WAVENUMBER, p, /XAXIS, WL_TICKS=[15,12,11,10,9,8,7,6,5,4], /UNIT_FINAL_ONLY
 ;
 ;
 ; :AUTHOR:
@@ -93,6 +107,8 @@ PRO AXIS_WAVENUMBER, plot_object, XAXIS=xaxis_dummy, YAXIS=yaxis, $
    ;; If YAXIS not set, then default XAXIS is used.
    xaxis = KEYWORD_SET(yaxis) ? 0b : 1b
 
+   IF ~ ISA( p, 'PLOT', /SCALAR ) || ~ ISA( p, 'IMAGE', /SCALAR ) THEN $
+      MESSAGE, 'You must pass a plot object to alter.'
 
    ;; Attempt to get the axes values. If they don't exist, then
    ;; attempting to overplot a second axis is probably a bad idea.
@@ -147,6 +163,15 @@ PRO AXIS_WAVENUMBER, plot_object, XAXIS=xaxis_dummy, YAXIS=yaxis, $
        tickname = STRING(ROUND(wl_int_wl),FORMAT='(i0,"'+unit+'")')
    ENDELSE
 
+
+   ;; Trim off the units if required.
+   IF KEYWORD_SET( ufo ) && n_int_wl GT 1 THEN BEGIN
+      ul = STRLEN( unit )
+      FOR i=0, n_int_wl-2 DO $
+         tickname[i] = STRMID( tickname[i], 0, STRLEN(tickname[i])-ul)
+
+   ENDIF
+
    wn_int_wl  = (KEYWORD_SET(nm) ? 1e7 : 1e4) / wl_int_wl
 
    IF KEYWORD_SET(verb) THEN PRINT, tickname,wl_int_wl, wn_int_wl
@@ -162,5 +187,5 @@ PRO AXIS_WAVENUMBER, plot_object, XAXIS=xaxis_dummy, YAXIS=yaxis, $
    axWn.MINOR = 0
    axWn.SHOWTEXT = 1
 
-
+   RETURN
 END
