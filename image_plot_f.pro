@@ -56,7 +56,9 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
                         BWRDIFF=bwrdiff, BWR2DIFF=bwr2diff, $
                         BGRDIFF=bgrdiff, GREEN=green, RED=red, BLUE=blue,$
                         ;; MAP PROJECTION STUFF
-                        CONTINENTS=continents, HIRES=hires, $
+                        CONTINENTS=continents, $
+                        COUNTRIES=countries, $
+                        HIRES=hires, $
                         MAP_PROJECTION=map_projection, $
                         CENTER_LATITUDE=clat, $
                         CENTER_LONGITUDE=clon, $
@@ -228,6 +230,9 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
 ;
 ;    CONTINENTS: in, optional, type=boolean
 ;       Overplot continent outlines.
+;    COUNTRIES: in, optional, type=boolean
+;       Also overplot the borders for countries. This is only available
+;        if the `CONTINENTS` keyword is set.
 ;    HIRES: in, optional, type=boolean
 ;       Make the outlines high-resolution.
 ;    MAP_PROJECTION: in, optional, type=string
@@ -409,6 +414,8 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
 ;    19 JAN 2015 (AJAS) Changed documentation to rst format.
 ;
 ;    20 JAN 2015 (AJAS) Removed the `MAPPOINTS_TWO_MISSING` keyword.
+;
+;    25 MAR 2015 (AJAS) Added `COUNTRIES` keyword.
 ;
 ;
 ;
@@ -942,7 +949,8 @@ FUNCTION IMAGE_PLOT_F, z, x, y, $
        objects = CREATE_STRUCT( objects, 'mapgrid', mapgrid )
 
        IF KEYWORD_SET(continents) THEN BEGIN
-          continents = MAPCONTINENTS( HIRES=hires, LIMIT=limit_pass  )
+          continents = MAPCONTINENTS( HIRES=hires, LIMIT=limit_pass, $
+                                      COUNTRIES=countries  )
           ;; Add the continents structure.
           objects = CREATE_STRUCT( objects, 'continents', continents)
        ENDIF
