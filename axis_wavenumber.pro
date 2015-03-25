@@ -107,7 +107,8 @@ PRO AXIS_WAVENUMBER, plot_object, XAXIS=xaxis_dummy, YAXIS=yaxis, $
    ;; If YAXIS not set, then default XAXIS is used.
    xaxis = KEYWORD_SET(yaxis) ? 0b : 1b
 
-   IF ~ ISA( p, 'PLOT', /SCALAR ) || ~ ISA( p, 'IMAGE', /SCALAR ) THEN $
+   IF ~ ISA( plot_object, 'PLOT', /SCALAR ) && $
+      ~ ISA( plot_object, 'IMAGE', /SCALAR ) THEN $
       MESSAGE, 'You must pass a plot object to alter.'
 
    ;; Attempt to get the axes values. If they don't exist, then
@@ -186,6 +187,7 @@ PRO AXIS_WAVENUMBER, plot_object, XAXIS=xaxis_dummy, YAXIS=yaxis, $
    axWn.TITLE = ''
    axWn.MINOR = 0
    axWn.SHOWTEXT = 1
+   axWn.TICKLEN = 0.5 * axWn.TICKLEN
 
    RETURN
 END
