@@ -95,6 +95,7 @@
 ; :HISTORY:
 ;
 ;      05 MAR 2014 (AJAS) Created by moving code from `IMAGE_PLOT_F`.
+;
 ;      26 MAR 2015 (AJAS) Halved the width of colour bars.
 ;-
     ON_ERROR, 2
