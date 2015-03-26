@@ -95,6 +95,7 @@
 ; :HISTORY:
 ;
 ;      05 MAR 2014 (AJAS) Created by moving code from `IMAGE_PLOT_F`.
+;      26 MAR 2015 (AJAS) Halved the width of colour bars.
 ;-
     ON_ERROR, 2
 
@@ -111,12 +112,12 @@
           flag_cb = 0
        END
        1: BEGIN ;; Sidebar
-          plot_position = [0.34, 0.10, 0.96, 0.91]
-          cbar_position = [0.14, 0.10, 0.19, 0.91]
+          plot_position = [0.32, 0.10, 0.96, 0.91]
+          cbar_position = [0.14, 0.10, 0.17, 0.91]
        END
        2: BEGIN ;; Colourbar
-          plot_position = [0.10, 0.27, 0.96, 0.91]
-          cbar_position = [0.10, 0.12, 0.96, 0.17]
+          plot_position = [0.10, 0.25, 0.96, 0.91]
+          cbar_position = [0.10, 0.12, 0.96, 0.15]
        END
        ELSE: MESSAGE,'/COLOURBAR and /SIDEBAR cannot both be set.'
     ENDCASE
